@@ -56,3 +56,6 @@ dist/
 venv/
 tmp/
 labeling_project
+my_ml_backend
+myexample
+text_classification_project
