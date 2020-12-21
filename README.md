@@ -75,7 +75,7 @@ pip install label-studio
 pip install --ignore-installed label-studio
 ```
 
-#### Local development
+#### 本地部署
 可以通过以下方式在本地运行最新版本的Label Studio，而无需从pip安装软件包：
 ```bash
 # Install all package dependencies
@@ -86,7 +86,7 @@ pip install -e .
 python label_studio/server.py start labeling_project --init
 ```
 
-## Run docker
+## 使用docker部署
 试用docker运行 `http://localhost:8080`:
 ```bash
 docker run --rm -p 8080:8080 -v `pwd`/my_project:/label-studio/my_project --name label-studio heartexlabs/label-studio:latest label-studio start my_project --init
@@ -131,7 +131,7 @@ Or you can just use .env file instead of INIT_COMMAND='...' adding this line:
 INIT_COMMAND=--init --force
 ```
 
-## One Click Deploy
+## 云上一键部署
 
 您现在可以一键式部署这些云中的任何一个 : 
 
