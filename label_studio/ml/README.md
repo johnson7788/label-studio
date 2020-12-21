@@ -1,6 +1,6 @@
 ## Quickstart
 
-Here is a quick example tutorial on how to run the ML backend with a simple text classifier:
+这是有关如何使用简单的文本分类器，运行ML后端的快速教程 
 
 0. Clone repo
    ```bash
@@ -30,6 +30,10 @@ Here is a quick example tutorial on how to run the ML backend with a simple text
     label-studio start text_classification_project --init --template text_sentiment --ml-backends http://localhost:9090
     ```
 
-## Create your own ML backend
+## 自定义的脚本
+label-studio/ml/examples/simple_text_classifier.py
+需要实现fit训练方法，和predict预测的方法
+
+## 创建自己的ML后端 
 
 Check examples in `label-studio/ml/examples` directory.
