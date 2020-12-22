@@ -33,3 +33,7 @@ label_studio/server.py start text_classification_project --init --template text_
 ```
 或者启动一个已有的project
 label_studio/server.py  start text_classification_project -b
+
+
+# 细粒度情感分析的branch是absa
+git checkout absa
