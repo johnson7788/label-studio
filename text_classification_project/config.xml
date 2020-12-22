@@ -1,9 +1,15 @@
-
 <View>
-  <Text name="text" value="$text"/>
-  <Choices name="sentiment" toName="text" choice="single">
-    <Choice value="消极"/>
-    <Choice value="中性"/>
-    <Choice value="积极"/>
-  </Choices>
+  <View style="flex: 30%; color:red">
+    <Header value="关键字" />
+    <Text name="keyword" value="$keyword"/>
+  </View>
+  <View style="flex: 30%">
+    <Header value="句子" />
+    <Text name="text" value="$text"/>
+    <Choices name="sentiment" toName="text" choice="single">
+      <Choice value="积极"/>
+      <Choice value="消极"/>
+      <Choice value="中性"/>
+    </Choices>
+  </View>
 </View>

@@ -4,7 +4,7 @@
 # @File  : use_api.py
 # @Author: johnson
 # @Contact : github: johnson7788
-# @Desc  :  使用requests调用api示例,
+# @Desc  :  比较复杂的ABSA，根据关键字进行情感分类的api
 # 初始化项目的方法 :  label_studio/server.py start labeling_project --template text_classification --init --force --debug -b
 # 启动项目: label_studio/server.py start labeling_project --debug
 
@@ -20,20 +20,27 @@ pp = pprint.PrettyPrinter(indent=4)
 
 def setup_config():
     """
-    配置项目
+    配置项目, 判断给定关键字的情感
     :return:
     """
     data = {"label_config":
-                """
-                <View>
-                  <Text name="text" value="$text"/>
-                  <Choices name="sentiment" toName="text" choice="single">
-                    <Choice value="消极"/>
-                    <Choice value="中性"/>
-                    <Choice value="积极"/>
-                  </Choices>
-                </View>
-                """}
+"""
+<View>
+  <View style="flex: 30%; color:red">
+    <Header value="关键字" />
+    <Text name="keyword" value="$keyword"/>
+  </View>
+  <View style="flex: 30%">
+    <Header value="句子" />
+    <Text name="text" value="$text"/>
+    <Choices name="sentiment" toName="text" choice="single">
+      <Choice value="积极"/>
+      <Choice value="消极"/>
+      <Choice value="中性"/>
+    </Choices>
+  </View>
+</View>
+"""}
     r = requests.post(host + "project/config", data=json.dumps(data), headers=headers)
     print(r.status_code)
     print(r.text)
@@ -101,57 +108,18 @@ def delete_completions():
 
 def import_data():
     """
-    导入数据
+    导入字典里面包含多个key和value的格式
     例如
-    data = [{"text": "很好，实惠方便，会推荐朋友"},{"text": "一直买的他家这款洗发膏，用的挺好的，洗的干净也没有头皮屑"}]
+    data = [{"text": "很好，实惠方便，会推荐朋友", "channel":"jd", "keyword":""},{"text": "一直买的他家这款洗发膏，用的挺好的，洗的干净也没有头皮屑"}]
     :return:
     """
-    data = [{"text": "很好，实惠方便，会推荐朋友"}, {"text": "一直买的他家这款洗发膏，用的挺好的，洗的干净也没有头皮屑"}, {"text": "不太顺滑"}, {"text": "特别香，持久"}]
-    r = requests.post(host + "project/import", data=json.dumps(data), headers=headers)
-    pp.pprint(r.json())
-
-def import_preannotation_data():
-    """
-    图片的示例，暂未试用
-    导入预先标记的数据, 主要目的是为了predictions中的score，用于人工标记的时候使用哪种方式优先标记数据
-    例如主动学习，优先从score小的开始标记
-    :return:
-    """
-    data = [{
-        "data": {
-            # "image_url" follows label config's attribute <Image value="$image_url" ...
-            "image_url": "https://my.domain.com/image1.jpg",
-        },
-        # "predictions" 包含当前任务的不同标注的列表
-        "predictions": [{
-            # "result" contains list of bounding boxes
-            "result": [{
-                # "from_name" follows label config's attribute <RectangleLabels name="label" ...
-                "from_name": "label",
-                # "to_name" follows label config's attribute <Image name="image" ...
-                "to_name": "image",
-                "type": "rectanglelabels",
-                "original_width": 600,
-                "original_height": 403,
-                "image_rotation": 0,
-                "value": {
-                    # Bounding box data - values are in percentages of image width/height!
-                    "x": 16.09,
-                    "y": 27.71,
-                    "width": 33.90,
-                    "height": 42.28,
-                    "rotation": 0,
-                    "rectanglelabels": [
-                        "Airplane"
-                    ]
-                },
-                # "score" 每一个边界框用于在UI中对它们进行排序
-                "score": 0.87
-            }],
-            # 总分可用于进行主动学习风格的数据采样
-            "score": 0.95
-        }]
-    }]
+    data = [
+        {"text": "产品香味：淡雅茶花味还行柔顺效果：可以其他特色：包装很有质感，价格还可以比较平价","channel":"jd", "keyword":"柔顺"},
+        {"text": "芦荟胶夏天必备万能神器 补水晒后修复 厚涂当面膜也可～","channel":"weibo", "keyword":"补水"},
+        {"text": "洗发水却很好，用完头发很顺滑，下次再试一下无硅油的","channel":"redbook","keyword":"顺滑"},
+        {"text": "这次是芦荟和绿茶款，主要是补水保湿效果，长期使用还可以减少痘痘。当然含各种花的成分，都有不同的效果。","channel":"tiktok","keyword":"保湿"},
+        {"text": "像涂改液，用前要摇一摇，水状质地，不黏腻，含酒精成分。","channel":"tmall","keyword":"质地"}
+    ]
     r = requests.post(host + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
 
@@ -207,6 +175,12 @@ def predict_model():
     print(r.status_code)
     print(r.text)
 
+def import_absa_data():
+    """
+    导入情感分析数据
+    :return:
+    """
+    pass
 
 if __name__ == '__main__':
     # setup_config()
