@@ -184,7 +184,7 @@ INIT_COMMAND=--init --force
 ## Machine Learning Integration
 
 您可以轻松地将自己喜欢的机器学习框架与Label Studio机器学习SDK连接起来。 只需两个简单的步即可完成： 
-1. 启动您自己的ML后端服务器  ([check here for detailed instructions](label_studio/ml/README.md)),
+1. 启动您自己的ML后端服务器  ([了解更多](label_studio/ml/README.md)),
 2. 将Label Studio连接到正在运行的ML后端  [/model](http://localhost:8080/model.html) page
 
 您可以使用:
