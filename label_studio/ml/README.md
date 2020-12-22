@@ -19,7 +19,7 @@ my_ml_backend/text_classification_project1a43/
 
 # ML后端
 使用label-studio-ml启动，调用label_studio/ml/server.py和 label_studio/ml/api.py, label_studio/ml/model.py 
-实际启动的是(方便debug): python {项目名}/_wsgi.py 额外参数  eg: python my_ml_backend/_wsgi.py
+实际启动的是(方便debug): python {项目名}/_wsgi.py 额外参数  eg: python my_ml_backend/_wsgi.py --log-level DEBUG --debug
 
 # label_studio的服务端
 使用label-studio启动，调用label_studio/server.py和label_studio/blueprint.py

@@ -341,10 +341,10 @@ class MLApi(BaseHTTPAPI):
 
     def predict(self, tasks, model_version, project):
         """
-        Predict batch of tasks for the given project and model version
-        :param tasks:
-        :param model_version:
-        :param project:
+        Predict batch of tasks for the given project and model version, 调取ML的post端口进行预测
+        :param tasks:  eg: [{'id': 0, 'data': {'text': '很好，实惠方便，会推荐朋友'}, 'predictions': []}]
+        :param model_version: eg: '1608623257'  根据时间戳，获取最后一个训练的模型
+        :param project: project 信息的类
         :return:
         """
         request = {
@@ -520,7 +520,15 @@ class MLBackend(object):
             logger.debug('Model version hasn\'t changed: ' + str(model_version))
 
     def make_predictions(self, task, project):
+        """
+        调用ML的接口进行预测
+        :param task:
+        :param project:
+        :return:
+        """
+        # 调用/setup接口设置模型
         self.sync(project)
+        # 预测模型
         response = self.api.predict([task], self.model_version, project)
         if response.is_error:
             if response.status_code == 404:

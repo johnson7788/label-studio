@@ -80,7 +80,7 @@ def config_from_file():
     try:
         config_file = INPUT_ARGUMENTS_PATH.open(encoding='utf8')
     except OSError:
-        raise LabelStudioError("Can't open input_args file: " + str(INPUT_ARGUMENTS_PATH) + ", " 
+        raise LabelStudioError("Can't open input_args file: " + str(INPUT_ARGUMENTS_PATH) + ", "
                                "use set_input_arguments_path() to setup it")
 
     with config_file:
@@ -1022,6 +1022,7 @@ def api_predictions():
         elif mode == 'all_tasks':
             # get tasks ids without predictions
             tasks_with_predictions = {}
+            # 对每个task进行预测，这里是一个task是一条数据，所以每次预测一条数据，好像有些问题
             for task_id, task in g.project.source_storage.items():
                 task_pred = g.project.make_predictions(task)
                 tasks_with_predictions[task_pred['id']] = task_pred

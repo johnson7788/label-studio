@@ -143,6 +143,16 @@ def train_model():
     print(r.status_code)
     print(r.text)
 
+def predict_model():
+    """
+    调用模型的预测接口
+    /api/models/predictions?mode={data|all_tasks}
+    :return: eg: {"details":"predictions are ready"}
+    """
+    r = requests.post(host+"models/predictions?mode=all_tasks", headers=headers)
+    print(r.status_code)
+    print(r.text)
+
 if __name__ == '__main__':
     # setup_config()
     # get_project()
@@ -153,4 +163,5 @@ if __name__ == '__main__':
     # get_completions()
     # health()
     # list_models()
-    train_model()
+    # train_model()
+    predict_model()
