@@ -363,6 +363,7 @@ class LabelStudioMLManager(object):
         if cls.without_redis():
             job_result = cls.train_script_wrapper(
                 project, label_config, train_kwargs=kwargs, tasks=tasks)
+            # eg: {"status": "ok", "train_output": {"labels": ["\u79ef\u6781", "\u6d88\u6781", "\u4e2d\u6027"], "model_file": "my_ml_backend/text_classification_project1a43/1608621143/model.pkl"}, "project": "text_classification_project1a43", "workdir": "my_ml_backend/text_classification_project1a43/1608621143", "version": "1608621143", "job_id": null, "time": 807.088093996048}
             train_output = json.loads(job_result)['train_output']
             cls.get_or_create(project, label_config, force_reload=True, train_output=train_output)
         else:

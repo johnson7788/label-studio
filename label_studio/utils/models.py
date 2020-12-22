@@ -539,11 +539,18 @@ class MLBackend(object):
             return response.response
 
     def train(self, completions, project):
+        """
+        开始训练模型
+        :param completions: 标注完成的样本
+        :param project: 项目的所有信息，包括标签和后端的模型等
+        :return:
+        """
         if self.train_job_is_running():
             raise CantStartTrainJobError('Can\'t start new training: Train job is running.')
         train_status = self.is_training(project)
         if train_status['is_training']:
             raise CantStartTrainJobError('Can\'t start new training: Train job is running.')
+        #调用api的训练方法
         response = self.api.train(completions, project)
         if response.is_error:
             raise CantStartTrainJobError('Can\'t update model: ML backend returns an error: ' + response.error_message)

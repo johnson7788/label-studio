@@ -1,4 +1,5 @@
 ##  默认配置文件
+配置文件由这里拷贝过来 label_studio/ml/default_configs
 
 ## Quickstart
 
@@ -28,7 +29,7 @@ label-studio start --init new_project --ml-backends http://localhost:9090 --temp
 
 2. 写下您的python依赖项 `requirements.txt`
 
-3. 打开`wsgi.py`并在 `init_model_server` 参数下进行配置 
+3. 打开`wsgi.py`并在 `init_model_server` 参数下进行配置,  wsgi.py是由label_studio/ml/default_configs/_wsgi.py.tmpl拷贝过来
     ```python
     from my_training_module import training_script
     from my_inference_module import InferenceModel

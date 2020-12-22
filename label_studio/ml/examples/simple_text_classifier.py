@@ -91,12 +91,12 @@ class SimpleTextClassifier(LabelStudioMLBase):
             input_text = completion['data'][self.value]
             input_texts.append(input_text)
 
-            # get an annotation
+            #获取标注的样本的label
             output_label = completion['completions'][0]['result'][0]['value']['choices'][0]
             output_labels.append(output_label)
             output_label_idx = label2idx[output_label]
             output_labels_idx.append(output_label_idx)
-
+        # 检查标注的样本的label和我们配置的标签label是一致都，如果是配置文件中是{'积极', '消极', '中性'}， 那么标注也应该是 {'积极', '消极', '中性'}
         new_labels = set(output_labels)
         if len(new_labels) != len(self.labels):
             self.labels = list(sorted(new_labels))
@@ -104,15 +104,15 @@ class SimpleTextClassifier(LabelStudioMLBase):
             label2idx = {l: i for i, l in enumerate(self.labels)}
             output_labels_idx = [label2idx[label] for label in output_labels]
 
-        # train the model
+        #开始训练模型
         self.reset_model()
         self.model.fit(input_texts, output_labels_idx)
 
-        # save output resources
+        # 保存模型
         model_file = os.path.join(workdir, 'model.pkl')
         with open(model_file, mode='wb') as fout:
             pickle.dump(self.model, fout)
-
+        # eg: {'labels': ['积极', '消极', '中性'], 'model_file': 'my_ml_backend/text_classification_project1a43/1608621143/model.pkl'}
         train_output = {
             'labels': self.labels,
             'model_file': model_file
