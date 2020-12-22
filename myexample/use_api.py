@@ -104,6 +104,52 @@ def import_data():
     r = requests.post(host+"project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
 
+def import_preannotation_data():
+    """
+    图片的示例，暂未试用
+    导入预先标记的数据, 主要目的是为了predictions中的score，用于人工标记的时候使用哪种方式优先标记数据
+    例如主动学习，优先从score小的开始标记
+    :return:
+    """
+    data = [{
+        "data": {
+            # "image_url" follows label config's attribute <Image value="$image_url" ...
+            "image_url": "https://my.domain.com/image1.jpg",
+        },
+        # "predictions" 包含当前任务的不同标注的列表
+        "predictions": [{
+            # "result" contains list of bounding boxes
+            "result": [{
+                # "from_name" follows label config's attribute <RectangleLabels name="label" ...
+                "from_name": "label",
+                # "to_name" follows label config's attribute <Image name="image" ...
+                "to_name": "image",
+                "type": "rectanglelabels",
+                "original_width": 600,
+                "original_height": 403,
+                "image_rotation": 0,
+                "value": {
+                    # Bounding box data - values are in percentages of image width/height!
+                    "x": 16.09,
+                    "y": 27.71,
+                    "width": 33.90,
+                    "height": 42.28,
+                    "rotation": 0,
+                    "rectanglelabels": [
+                        "Airplane"
+                    ]
+                },
+                # "score" 每一个边界框用于在UI中对它们进行排序
+                "score": 0.87
+            }],
+            # 总分可用于进行主动学习风格的数据采样
+            "score": 0.95
+        }]
+    }]
+    r = requests.post(host+"project/import", data=json.dumps(data), headers=headers)
+    pp.pprint(r.json())
+
+
 def health():
     """
     测试健康
