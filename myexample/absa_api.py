@@ -12,6 +12,7 @@
 import requests
 import json
 import pprint
+import os
 
 headers = {'content-type': 'application/json;charset=UTF-8'}
 host = "http://localhost:8080/api/"
@@ -175,12 +176,16 @@ def predict_model():
     print(r.status_code)
     print(r.text)
 
-def import_absa_data():
+def import_absa_data(db="beautydb", table="da_wide_table_before", number=6000):
     """
     导入情感分析数据
+    :param db:
+    :param table:
+    :param number:
     :return:
     """
-    pass
+    from .read_hive import get_sentiment_corpus_detail
+
 
 if __name__ == '__main__':
     # setup_config()
