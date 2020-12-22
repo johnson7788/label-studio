@@ -28,4 +28,8 @@ my_ml_backend/_wsgi.py --log-level DEBUG --debug
 ```
 
 ## 启动一个label-studio关联ml后端
+```
 label_studio/server.py start text_classification_project --init --template text_classification --ml-backends http://localhost:9090
+```
+或者启动一个已有的project
+label_studio/server.py  start text_classification_project -b
