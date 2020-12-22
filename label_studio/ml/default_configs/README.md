@@ -1,31 +1,34 @@
+##  默认配置文件
+
 ## Quickstart
 
-Build and start Machine Learning backend on `http://localhost:9090`
+构建并启动机器学习后端  `http://localhost:9090`
 
 ```bash
 docker-compose up
 ```
 
-Check if it works:
+检查health:
 
 ```bash
 $ curl http://localhost:9090/health
 {"status":"UP"}
 ```
 
-Then connect running backend to Label Studio:
+然后将运行中的后端连接到Label Studio :
 
 ```bash
 label-studio start --init new_project --ml-backends http://localhost:9090 --template image_classification
 ```
 
+## 编写自己的模型 
+1.将用于模型训练和推理的脚本放在根目录中。 
+请遵循下面介绍的[API guidelines](#api-guidelines) 
+您可以将所有内容放在一个文件中，也可以创建2个单独的文件，例如`my_training_module.py` and `my_inference_module.py`
 
-## Writing your own model
-1. Place your scripts for model training & inference inside root directory. Follow the [API guidelines](#api-guidelines) described bellow. You can put everything in a single file, or create 2 separate one say `my_training_module.py` and `my_inference_module.py`
+2. 写下您的python依赖项 `requirements.txt`
 
-2. Write down your python dependencies in `requirements.txt`
-
-3. Open `wsgi.py` and make your configurations under `init_model_server` arguments:
+3. 打开`wsgi.py`并在 `init_model_server` 参数下进行配置 
     ```python
     from my_training_module import training_script
     from my_inference_module import InferenceModel
@@ -36,7 +39,7 @@ label-studio start --init new_project --ml-backends http://localhost:9090 --temp
         ...
     ```
 
-4. Make sure you have docker & docker-compose installed on your system, then run
+4. 确保在系统上安装了docker＆docker-compose，然后运行 
     ```bash
     docker-compose up --build
     ```
@@ -45,7 +48,7 @@ label-studio start --init new_project --ml-backends http://localhost:9090 --temp
 
 
 #### Inference module
-In order to create module for inference, you have to declare the following class:
+为了创建推理模块，您必须声明以下类：
 
 ```python
 from htx.base_model import BaseModel
@@ -74,7 +77,9 @@ class MyModel(BaseModel):
 ```
 
 #### Training module
-Training could be made in a separate environment. The only one convention is that data iterator and working directory are specified as input arguments for training function which outputs JSON-serializable resources consumed later by `load()` function in inference module.
+训练可以在单独的环境中进行。 
+唯一的约定是，将数据迭代器和工作目录指定为训练函数的输入参数，
+训练函数将输出可序列化的JSON资源，稍后由推理模块中的load()函数使用。 
 
 ```python
 def train(input_iterator, working_dir, **kwargs):

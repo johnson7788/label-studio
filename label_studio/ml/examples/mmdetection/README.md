@@ -1,17 +1,21 @@
-This [Machine Learning backend](https://labelstud.io/guide/ml.html) allows you to automatically prelabel your images with bounding boxes. It is powered by amazing [OpenMMLab MMDetection library](https://github.com/open-mmlab/mmdetection), which gives you access to many existing state-of-the-art models like FasterRCNN, RetinaNet, YOLO and others. 
+This [Machine Learning backend](https://labelstud.io/guide/ml.html) 允许您使用边框自动为图像加label. 
+由 [OpenMMLab MMDetection library](https://github.com/open-mmlab/mmdetection)提供, 
+这使您可以访问许多现有的最新模型，例如FasterRCNN，RetinaNet，YOLO等。 
 
-Check this installation guide and then play around them, pick up the best model that suits your current dataset!
+# 图片目标检测算法的示例
 
+查看此安装指南，然后进行操作，选择适合您当前数据集的最佳模型！
 
 ## Start using it
 
-1. [Install the model locally](#Installation) or just copy paste this URL: `https://app.labelstud.io/coco-detector`
+1. [Install the model locally](#Installation) or just copy paste this URL: `https://app.labelstud.io`
 
-2. Run Label Studio, then go to the **Model** page. Paste the selected ML backend URL then click on **Add Backend**.
+2. 运行Label Studio，然后转到 **Model** 页面。 粘贴所选的ML后端URL，然后单击 **Add Backend**.
 
-3. Go to **Setup** page, use `COCO annotation` template or `Bbox object detection`. O
-   Optionally you can modify label config with `predicted_values` attribute. It provides a list of COCO labels separated by comma. If object detector outputs any of these labels, they will be translated to the actual label name from `value` attribute.
-
+3. Go to **Setup** page, use `COCO annotation` template or `Bbox object detection`.
+   (可选)您可以使用`predicted_values`属性修改label配置。 
+   它提供了以逗号分隔的COCOlabel列表。 
+   如果对象检测器输出这些label中的任何一个，它们将从“value”属性转换为实际的label名称。
     For example:
     
     ```xml
@@ -19,11 +23,11 @@ Check this installation guide and then play around them, pick up the best model 
     <Label value="Car" predicted_values="car,truck"/>
     ```
    
-means that
-- if COCO object detector predicts bbox with label `"airplane"`, you'll finally see the label `"Airplane"`.
+意思是: 
+- 如果COCO对象检测器预测带有label`"airplane"`的bbox，您最终将看到label `"Airplane"`。 
 - if it predicts `"car"` or `"truck"` - they will be squashed to `"Car"` label.
 
-[Here is](#The-full-list-of-COCO-labels) the full list of COCO labels for convenience.
+[Here is](#The-full-list-of-COCO-labels) 为了方便起见，COCOlabel的完整labels。 
 
 
 ## Installation

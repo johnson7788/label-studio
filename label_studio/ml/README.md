@@ -15,7 +15,7 @@
    pip install -r requirements.txt
    ```
    
-2. Create new ML backend
+2. Create new ML backend,  你也可以修改simple_text_classifier.py，生成自己的脚本
    ```bash
    label-studio-ml init my_ml_backend --script label-studio/ml/examples/simple_text_classifier.py
    ```
