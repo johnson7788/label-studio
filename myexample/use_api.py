@@ -27,9 +27,9 @@ def setup_config():
 <View>
   <Text name="text" value="$text"/>
   <Choices name="sentiment" toName="text" choice="single">
-    <Choice value="积极"/>
     <Choice value="消极"/>
     <Choice value="中性"/>
+    <Choice value="积极"/>
   </Choices>
 </View>
 """}

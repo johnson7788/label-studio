@@ -8,7 +8,7 @@
   "label_config": "config.xml",
   "input_path": "tasks.json",
   "output_dir": "completions",
-  "instruction": "<img src='static/images/ls_logo.png'><br> Type some <b>hypertext</b> for annotators here!<br> <a href='https://labelstud.io/guide/labeling.html'>Read more</a> about the labeling interface.",
+  "instruction": "ABSA情感分类模型",
   "allow_delete_completions": true,
   "templates_dir": "examples",
   "editor": {
