@@ -56,5 +56,5 @@ dist/
 venv/
 tmp/
 labeling_project
-my_ml_backend
+my_ml_backend/text_classification_project*
 text_classification_project
