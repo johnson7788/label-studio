@@ -39,7 +39,7 @@ class ABSATextClassifier(LabelStudioMLBase):
             self.reset_model()
             # 所有的labels, self.labels: ['积极', '消极', '中性']
             self.labels = self.info['labels']
-            # 训练模型，
+            # 训练模型，这里是调用sklearn的fit函数
             self.model.fit(X=self.labels, y=list(range(len(self.labels))))
             print('初始化模型 from_name={from_name}, to_name={to_name}, labels={labels}'.format(
                 from_name=self.from_name, to_name=self.to_name, labels=str(self.labels)

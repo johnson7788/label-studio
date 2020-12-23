@@ -8,7 +8,6 @@ from sklearn.pipeline import make_pipeline
 
 from label_studio.ml import LabelStudioMLBase
 
-
 class SimpleTextClassifier(LabelStudioMLBase):
 
     def __init__(self, **kwargs):
@@ -33,7 +32,7 @@ class SimpleTextClassifier(LabelStudioMLBase):
             self.reset_model()
             # This is an array of <Choice> labels
             self.labels = self.info['labels']
-            # make some dummy initialization
+            # make some dummy initialization, 这里是调用sklearn的fit函数
             self.model.fit(X=self.labels, y=list(range(len(self.labels))))
             print('Initialized with from_name={from_name}, to_name={to_name}, labels={labels}'.format(
                 from_name=self.from_name, to_name=self.to_name, labels=str(self.labels)
