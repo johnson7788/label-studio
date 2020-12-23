@@ -172,7 +172,8 @@ def list_models():
 
 def train_model():
     """
-    训练模型, 训练所有的后端模型
+    训练模型, 训练所有的后端模型, 只有在有新的标注后，才调用后端自定义的fit接口，没有新的标注，就不调用后端的fit训练模型
+    例如：调用absa_classifier.py的ABSATextClassifier类的init，然后调用fit
     label_studio 调用 label_studio_ml的  'http://localhost:9090/train'接口
     调用的post的参数
     request = {dict: 4} {'completions': [{'completions': [{'created_at': 1608617962, 'id': 1, 'lead_time': 5.162, 'result': [{'from_name': 'sentiment', 'id': '8BAF02Fcq5', 'to_name': 'text', 'type': 'choices', 'value': {'choices': ['积极']}}]}], 'data': {'text': '很好，实惠方便，会推荐朋友'}, '
@@ -190,7 +191,7 @@ def train_model():
 
 def predict_model():
     """
-    调用模型的预测接口
+    调用模型的预测接口, 首先调用自定义的分了器，例如absa_classifier.py的init，然后对所有tasks进行调用absa_classifier.py的predict进行预测
     /api/models/predictions?mode={data|all_tasks}
     :return: eg: {"details":"predictions are ready"}
     """
@@ -279,7 +280,7 @@ def check_data():
             print(f"发现重复数据:{data['id']}和{repeat_id}")
     print(f"共有重复数据{len(datas)-len(not_repeat_data)}条")
 if __name__ == '__main__':
-    check_data()
+    # check_data()
     # setup_config()
     # get_project()
     # import_data()
@@ -289,6 +290,6 @@ if __name__ == '__main__':
     # get_completions()
     # health()
     # list_models()
-    # train_model()
+    train_model()
     # predict_model()
     # import_absa_data(number=10)
