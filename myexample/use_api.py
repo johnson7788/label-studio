@@ -59,7 +59,8 @@ def get_tasks(taskid=None):
         taskid = str(taskid)
         r = requests.get(host + "tasks/" + taskid, headers=headers)
     else:
-        r = requests.get(host + "tasks", headers=headers)
+        payload = {'fields': 'all', 'page': 1, 'page_size': 20, 'order': 'id'}
+        r = requests.get(host + "tasks", params=payload, headers=headers)
     print(r.json())
     pp.pprint(r.json())
 

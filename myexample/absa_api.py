@@ -13,6 +13,7 @@ import requests
 import json
 import pprint
 import os
+import hashlib
 
 headers = {'content-type': 'application/json;charset=UTF-8'}
 host = "http://localhost:8080/api/"
@@ -57,7 +58,7 @@ def get_project():
     pp.pprint(r.json())
 
 
-def get_tasks(taskid=None):
+def get_tasks(taskid=None, page_size=5000):
     """
     获取task, 获取数据，如果标注完成，返回标注的状态
     :param: taskid 获取第几条数据，如果为None，获取所有数据
@@ -67,9 +68,12 @@ def get_tasks(taskid=None):
         taskid = str(taskid)
         r = requests.get(host + "tasks/" + taskid, headers=headers)
     else:
-        r = requests.get(host + "tasks", headers=headers)
+        payload = {'fields': 'all', 'page': 1, 'page_size': page_size, 'order': 'id'}
+        r = requests.get(host + "tasks", params=payload, headers=headers)
     print(r.json())
     pp.pprint(r.json())
+    results = r.json()
+    return results
 
 
 def delete_tasks():
@@ -78,6 +82,7 @@ def delete_tasks():
     :return:
     """
     r = requests.delete(host + "tasks", headers=headers)
+    print("完成，返回code:")
     print(r.status_code)
     print(r.text)
 
@@ -176,18 +181,88 @@ def predict_model():
     print(r.status_code)
     print(r.text)
 
-def import_absa_data(db="beautydb", table="da_wide_table_before", number=6000):
+def cal_md5(content):
     """
-    导入情感分析数据
-    :param db:
-    :param table:
+    计算content字符串的md5
+    :param content:
+    :return:
+    """
+    # 使用encode
+    result = hashlib.md5(content.encode())
+    # 打印hash
+    md5 = result.hexdigest()
+    return md5
+
+def get_imported_data_md5(imported_data):
+    """
+    对已经导入的数据，计算所有md5，如果data['md5']存在，直接过去，否则用keyword+text计算md5
+    :return: 按列表顺序返回md5的列表[]
+    """
+    md5_list = []
+    for res in imported_data:
+        data = res['data']
+        md5_value = data.get('md5')
+        if not md5_value:
+            #说明不存在md5这个字段，开始计算
+            content = data['keyword'] + data['text']
+            md5_value = cal_md5(content=content)
+        md5_list.append(md5_value)
+    return md5_list
+
+def import_absa_data(number=10):
+    """
+    导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     :param number:
     :return:
     """
-    from .read_hive import get_sentiment_corpus_detail
+    from read_hive import get_absa_corpus
+    #要导入的数据
+    valid_data = []
+    #已经导入的数据, 注意更改获取的样本数目，默认是5000条
+    imported_data = get_tasks(page_size=5000)
+    imported_data_md5 = get_imported_data_md5(imported_data)
+    #开始从hive数据库拉数据
+    data = get_absa_corpus(number=number)
+    # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
+    for one_data in data:
+        content = one_data['keyword'] + one_data['text']
+        data_md5 = cal_md5(content)
+        if data_md5 in imported_data_md5:
+            # 数据已经导入到label-studio过了，不需要重新导入
+            continue
+        else:
+            # 没有导入过label-studio，那么加入到valid_data，进行导入
+            # 设置md5字段，方便以后获取
+            one_data['md5'] = data_md5
+            valid_data.append(one_data)
+    print(f"可导入的有效数据是{len(valid_data)}, 有重复数据{len(data)-len(valid_data)} 是无需导入的")
+    if not valid_data:
+        #如果都是已经导入过的数据，直接放弃导入
+        return
+    r = requests.post(host + "project/import", data=json.dumps(valid_data), headers=headers)
+    pp.pprint(r.json())
+    print(f"共导入数据{len(valid_data)}条")
 
-
+def check_data():
+    """
+    查看下已导入的数据
+    :return:
+    """
+    datas = get_tasks()
+    not_repeat_id = []
+    not_repeat_data = []
+    for data in datas:
+        content = data['data']['keyword'] + data['data']['text']
+        if content not in not_repeat_data:
+            not_repeat_data.append(content)
+            not_repeat_id.append(data['id'])
+        else:
+            repeat_idx = not_repeat_data.index(content)
+            repeat_id = not_repeat_id[repeat_idx]
+            print(f"发现重复数据:{data['id']}和{repeat_id}")
+    print(f"共有重复数据{len(datas)-len(not_repeat_data)}条")
 if __name__ == '__main__':
+    check_data()
     # setup_config()
     # get_project()
     # import_data()
@@ -199,3 +274,4 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
+    # import_absa_data(number=10)
