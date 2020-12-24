@@ -135,11 +135,11 @@ class ABSATextClassifier(LabelStudioMLBase):
         data = {'data': data}
         headers = {'content-type': 'application/json'}
         r = requests.post(self.train_url, headers=headers, data=json.dumps(data), timeout=600)
-        return r.json()
+        print(f"训练结果{r.json()}")
 
         # eg: {'labels': ['积极', '消极', '中性'], 'model_file': 'my_ml_backend/text_classification_project1a43/1608621143/model.pkl'}
         train_output = {
             'labels': self.labels,
-            'model_file': model_file
+            'model_file': "model_file"
         }
         return train_output
