@@ -24,7 +24,7 @@ label-studio-ml start my_ml_backend
 ```
 或方法2：
 ```buildoutcfg
-my_ml_backend/_wsgi.py --log-level DEBUG --debug
+python my_ml_backend/_wsgi.py --log-level DEBUG --debug
 ```
 
 ## 启动一个label-studio关联ml后端
@@ -37,3 +37,12 @@ label_studio/server.py  start text_classification_project -b
 
 # 细粒度情感分析的branch是absa
 git checkout absa
+
+1. 启动label-studio --->LS网页端
+label_studio/server.py  start text_classification_project -b
+
+2. 启动的ml后端 --->请求自定义的api
+label-studio-ml start my_ml_backend
+
+3. 启动自定义的Textbrewer api
+python main_api.py
