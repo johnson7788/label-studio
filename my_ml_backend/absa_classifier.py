@@ -96,18 +96,21 @@ class ABSATextClassifier(LabelStudioMLBase):
 
     def fit(self, completions, workdir=None, **kwargs):
         """
-        训练模型
+        训练模型, 调用train的api接口时，进行训练，会获取所有已标注完成的数据，如果训练过模型，并且没有新的标注数据时，
+        self.train_output会有数据，就不会走到这个训练接口了
         :param completions:
         :param workdir:
         :param kwargs:
         :return:
         """
+        # 保存所有text的列表，用于训练
         input_texts = []
+        # output_labels保存所有标注的labels， output_labels_idx保存labels对应的id
         output_labels, output_labels_idx = [], []
+        # eg: label2idx: {'积极': 0, '消极': 1, '中性': 2}
         label2idx = {l: i for i, l in enumerate(self.labels)}
         for completion in completions:
-            # get input text from task data
-
+            # 获取已标注完成的所有数据
             if completion['completions'][0].get('skipped') or completion['completions'][0].get('was_cancelled'):
                 continue
             # input_text是一条文本
@@ -130,8 +133,8 @@ class ABSATextClassifier(LabelStudioMLBase):
 
         #开始训练模型， 先初始化模型
         self.reset_model()
+        #训练模型
         self.model.fit(input_texts, output_labels_idx)
-
         # 保存模型
         model_file = os.path.join(workdir, 'model.pkl')
         with open(model_file, mode='wb') as fout:
