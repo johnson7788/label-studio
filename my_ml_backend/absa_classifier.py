@@ -2,10 +2,8 @@ import pickle
 import os
 import numpy as np
 
-from sklearn.linear_model import LogisticRegression
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.pipeline import make_pipeline
-
+import requests
+import json
 from label_studio.ml import LabelStudioMLBase
 
 class ABSATextClassifier(LabelStudioMLBase):
@@ -18,6 +16,9 @@ class ABSATextClassifier(LabelStudioMLBase):
         """
         # don't forget to initialize base class...
         super(ABSATextClassifier, self).__init__(**kwargs)
+
+        self.train_url = "http://127.0.0.1:5000/api/train"
+        self.predict_url = "http://127.0.0.1:5000/api/predict"
 
         # 然后从配置中收集所有key，这些key将用于从任务中提取数据并形成预测
         # 解析的label配置仅包含一个<Choices>类型的输出
@@ -34,30 +35,23 @@ class ABSATextClassifier(LabelStudioMLBase):
         #self.value: text
         self.value = self.info['inputs'][0]['value']
 
+        #判断模型时已经训练完成还是没有训练过
         if not self.train_output:
             # 如果没有训练，请定义冷启动的文本分类器, 初始化模型
-            self.reset_model()
             # 所有的labels, self.labels: ['积极', '消极', '中性']
             self.labels = self.info['labels']
             # 训练模型，这里是调用sklearn的fit函数
-            self.model.fit(X=self.labels, y=list(range(len(self.labels))))
             print('初始化模型 from_name={from_name}, to_name={to_name}, labels={labels}'.format(
                 from_name=self.from_name, to_name=self.to_name, labels=str(self.labels)
             ))
         else:
             # 否则，从最新的训练结果中加载模型, eg: '/Users/admin/git/label-studio/my_ml_backend/text_classification_project1a43/1608710764/model.pkl'
             self.model_file = self.train_output['model_file']
-            #加载模型
-            with open(self.model_file, mode='rb') as f:
-                self.model = pickle.load(f)
             # 获取labels,从训练的输出中获取, eg: ['积极', '消极', '中性']
             self.labels = self.train_output['labels']
             print('从训练结果中获取 from_name={from_name}, to_name={to_name}, labels={labels}'.format(
                 from_name=self.from_name, to_name=self.to_name, labels=str(self.labels)
             ))
-
-    def reset_model(self):
-        self.model = make_pipeline(TfidfVectorizer(ngram_range=(1, 3)), LogisticRegression(C=10, verbose=True))
 
     def predict(self, tasks, **kwargs):
         """
@@ -67,20 +61,20 @@ class ABSATextClassifier(LabelStudioMLBase):
         :param kwargs:
         :return:
         """
-        # collect input texts
-        input_texts = []
+        #预测数据格式是[(sentence, apspect_keyword),....]
+        data = []
         for task in tasks:
-            input_texts.append(task['data'][self.value])
+            one_data = (task['data'][self.value], task['data']['keyword'])
+            data.append(one_data)
 
-        # 调用模型预测,
-        probabilities = self.model.predict_proba(input_texts)
-        predicted_label_indices = np.argmax(probabilities, axis=1)
-        # 预测分数 eg: [0.70329936]
-        predicted_scores = probabilities[np.arange(len(predicted_label_indices)), predicted_label_indices]
+        data = {'data': data}
+        headers = {'content-type': 'application/json'}
+        r = requests.post(self.predict_url, headers=headers, data=json.dumps(data), timeout=360)
+        results = r.json()
         predictions = []
-        for idx, score in zip(predicted_label_indices, predicted_scores):
+        for one_res in results:
+            predicted_label, predict_score = one_res
             # 预测的label, eg: '中性'
-            predicted_label = self.labels[idx]
             # prediction result for the single task
             result = [{
                 'from_name': self.from_name,
@@ -90,7 +84,7 @@ class ABSATextClassifier(LabelStudioMLBase):
             }]
 
             # 把所有样本的预测结果和分数加到predictions后返回
-            predictions.append({'result': result, 'score': score})
+            predictions.append({'result': result, 'score': predict_score})
 
         return predictions
 
@@ -103,8 +97,8 @@ class ABSATextClassifier(LabelStudioMLBase):
         :param kwargs:
         :return:
         """
-        # 保存所有text的列表，用于训练
-        input_texts = []
+        #训练数据格式是[(sentence, apspect_keyword,label),....]
+        data = []
         # output_labels保存所有标注的labels， output_labels_idx保存labels对应的id
         output_labels, output_labels_idx = [], []
         # eg: label2idx: {'积极': 0, '消极': 1, '中性': 2}
@@ -115,11 +109,16 @@ class ABSATextClassifier(LabelStudioMLBase):
                 continue
             # input_text是一条文本
             input_text = completion['data'][self.value]
-            input_texts.append(input_text)
+
+            #获取aspect关键词
+            input_aspect = completion['data']['keyword']
 
             #获取标注的样本的label, eg: '中性'
             output_label = completion['completions'][0]['result'][0]['value']['choices'][0]
             output_labels.append(output_label)
+            #组成一条训练数据
+            one_data = (input_text, input_aspect, output_label)
+            data.append(one_data)
             #转换成id
             output_label_idx = label2idx[output_label]
             output_labels_idx.append(output_label_idx)
@@ -131,14 +130,12 @@ class ABSATextClassifier(LabelStudioMLBase):
             label2idx = {l: i for i, l in enumerate(self.labels)}
             output_labels_idx = [label2idx[label] for label in output_labels]
 
-        #开始训练模型， 先初始化模型
-        self.reset_model()
-        #训练模型
-        self.model.fit(input_texts, output_labels_idx)
-        # 保存模型
-        model_file = os.path.join(workdir, 'model.pkl')
-        with open(model_file, mode='wb') as fout:
-            pickle.dump(self.model, fout)
+        #构造请求，发送数据，让模型开始训练
+        data = {'data': data}
+        headers = {'content-type': 'application/json'}
+        r = requests.post(self.train_url, headers=headers, data=json.dumps(data), timeout=360)
+        return r.json()
+
         # eg: {'labels': ['积极', '消极', '中性'], 'model_file': 'my_ml_backend/text_classification_project1a43/1608621143/model.pkl'}
         train_output = {
             'labels': self.labels,
