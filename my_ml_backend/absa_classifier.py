@@ -66,10 +66,10 @@ class ABSATextClassifier(LabelStudioMLBase):
         for task in tasks:
             one_data = (task['data'][self.value], task['data']['keyword'])
             data.append(one_data)
-
+        print(f"开始预测模型: 数据量{len(data)}")
         data = {'data': data}
         headers = {'content-type': 'application/json'}
-        r = requests.post(self.predict_url, headers=headers, data=json.dumps(data), timeout=360)
+        r = requests.post(self.predict_url, headers=headers, data=json.dumps(data), timeout=600)
         results = r.json()
         predictions = []
         for one_res in results:
@@ -130,10 +130,11 @@ class ABSATextClassifier(LabelStudioMLBase):
             label2idx = {l: i for i, l in enumerate(self.labels)}
             output_labels_idx = [label2idx[label] for label in output_labels]
 
+        print("开始训练模型: 数据量{len(data)}")
         #构造请求，发送数据，让模型开始训练
         data = {'data': data}
         headers = {'content-type': 'application/json'}
-        r = requests.post(self.train_url, headers=headers, data=json.dumps(data), timeout=360)
+        r = requests.post(self.train_url, headers=headers, data=json.dumps(data), timeout=600)
         return r.json()
 
         # eg: {'labels': ['积极', '消极', '中性'], 'model_file': 'my_ml_backend/text_classification_project1a43/1608621143/model.pkl'}
