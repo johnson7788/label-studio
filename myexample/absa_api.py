@@ -291,6 +291,6 @@ if __name__ == '__main__':
     # delete_completions()
     # health()
     # list_models()
-    # train_model()
+    train_model()
     # predict_model()
-    import_absa_data(number=20)
+    # import_absa_data(number=20)
