@@ -217,6 +217,7 @@ if __name__ == '__main__':
     # get_tasks(taskid=0)
     # delete_tasks()
     # get_completions()
+    # delete_completions()
     # health()
     # list_models()
     # train_model()
