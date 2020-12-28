@@ -97,7 +97,7 @@ class ABSATextClassifier(LabelStudioMLBase):
         :param kwargs:
         :return:
         """
-        #训练数据格式是[(sentence, apspect_keyword,label),....]
+        #训练数据格式是[(sentence, apspect_keyword, start_idx, end_idx, label),....]
         data = []
         # output_labels保存所有标注的labels， output_labels_idx保存labels对应的id
         output_labels, output_labels_idx = [], []
@@ -111,13 +111,19 @@ class ABSATextClassifier(LabelStudioMLBase):
             input_text = completion['data'][self.value]
 
             #获取aspect关键词
-            input_aspect = completion['data']['keyword']
+            # input_aspect = completion['data']['keyword']
+            # output_label = completion['completions'][0]['result'][0]['value']['choices'][0]
 
             #获取标注的样本的label, eg: '中性'
-            output_label = completion['completions'][0]['result'][0]['value']['choices'][0]
-            output_labels.append(output_label)
+            completion_results = completion['completions'][0]['result']
+            for completion_result in completion_results:
+                input_aspect = completion_result['text']
+                start_idx = completion_result['start']
+                end_idx = completion_result['value']['end']
+                output_label = completion_result['value']['labels'][0]
+                output_labels.append(output_label)
             #组成一条训练数据
-            one_data = (input_text, input_aspect, output_label)
+            one_data = (input_text, input_aspect, start_idx, end_idx, output_label)
             data.append(one_data)
             #转换成id
             output_label_idx = label2idx[output_label]
