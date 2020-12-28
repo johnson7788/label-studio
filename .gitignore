@@ -56,9 +56,10 @@ dist/
 venv/
 tmp/
 labeling_project
-my_ml_backend/text_classification_project*
+my_ml_backend/bert_sentiment
 text_classification_project/completions
 text_classification_project/tasks.json
 text_classification_project/source.json
 myexample/read_hive.py
 text_classification_project/export
+new_ml_backend/electra_sentiment
