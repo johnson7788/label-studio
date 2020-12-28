@@ -18,7 +18,11 @@
   "ml_backends": [
     {
       "url": "http://localhost:9090",
-      "name": "text_classification_project1a43"
+      "name": "bert_sentiment"
+    },
+    {
+      "url": "http://localhost:9091",
+      "name": "electra_sentiment"
     }
   ],
   "task_page_auto_update_timer": 10000,

@@ -34,6 +34,22 @@ label_studio/server.py start text_classification_project --init --template text_
 或者启动一个已有的project
 label_studio/server.py  start text_classification_project -b
 
+# 使用多个模型
+如果使用2个模型，需要更改config.json配置, 添加一个新，例如ELECTRA，那么需要选择不同的接口,如下
+```buildoutcfg
+  "ml_backends": [
+    {
+      "url": "http://localhost:9090",
+      "name": "bert_sentiment"
+    },
+    {
+      "url": "http://localhost:9091",
+      "name": "electra_sentiment"
+    }
+  ],
+```
+然后复制一个my_ml_backend 成一个新的文件夹，启动一个新的
+python _wsgi.py --log-level DEBUG --debug --port 9091
 
 # 细粒度情感分析的branch是absa
 git checkout absa
