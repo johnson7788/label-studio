@@ -24,7 +24,7 @@ localhost = "http://localhost:8080/api/"
 pp = pprint.PrettyPrinter(indent=4)
 
 
-def setup_config():
+def setup_config(hostname=None):
     """
     配置项目, 判断给定关键字的情感
     :return:
@@ -33,7 +33,7 @@ def setup_config():
 """
 <View>
   <View style="flex: 30%; color:red">
-    <Header value="关键字" />
+    <Header value="$wordtype" />
     <Text name="keyword" value="$keyword"/>
   </View>
   <View style="flex: 30%">
@@ -46,10 +46,19 @@ def setup_config():
   </View>
 </View>
 """}
+    if hostname != None:
+        host = hostname
     r = requests.post(host + "project/config", data=json.dumps(data), headers=headers)
     print(r.status_code)
     print(r.text)
 
+def setup_config_host(hostnames):
+    """
+    删除所有task, 数据, 同时会删除已标注的数据
+    :return:
+    """
+    for hostname in hostnames:
+        setup_config(hostname=hostname)
 
 def get_project():
     """
@@ -470,7 +479,7 @@ def export_data_host(hostnames):
 
 if __name__ == '__main__':
     # check_data()
-    # setup_config()
+    # setup_config(hostname=host)
     # get_project()
     # import_data()
     # get_tasks()
@@ -482,16 +491,18 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    # hostnames = ["http://192.168.50.119:8090/api/"]
-    # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostname)
+    hostnames = ["http://192.168.50.119:8090/api/"]
+    # setup_config(hostname="http://192.168.50.119:8090/api/")
+    # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
     # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]
     hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/","http://192.168.50.119:8082/api/",
                  "http://192.168.50.119:8083/api/", "http://192.168.50.119:8084/api/","http://192.168.50.119:8085/api/",
                  "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
                  "http://192.168.50.119:8089/api/"]
     # delete_tasks_host(hostnames=hostnames)
+    setup_config_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
-    get_completions_host(hostnames=hostnames)
+    # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames)

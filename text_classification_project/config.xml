@@ -1,6 +1,6 @@
 <View>
   <View style="flex: 30%; color:red">
-    <Header value="关键字" />
+    <Header value="$wordtype" />
     <Text name="keyword" value="$keyword"/>
   </View>
   <View style="flex: 30%">
