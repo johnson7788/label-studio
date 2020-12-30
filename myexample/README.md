@@ -17,7 +17,7 @@ label_studio/server.py start labeling_project --debug -b
 ## 初始化一个ml的后端
 label-studio-ml init my_ml_backend --script label_studio/ml/examples/simple_text_classifier.py
 
-## 启动一个ml
+## 启动一个已存在ml后端
 方法1：
 ```buildoutcfg
 label-studio-ml start my_ml_backend
@@ -29,7 +29,7 @@ python my_ml_backend/_wsgi.py --log-level DEBUG --debug
 
 ## 启动一个label-studio关联ml后端
 ```
-label_studio/server.py start text_classification_project --init --template text_classification --ml-backends http://localhost:9090
+label_studio/server.py start text_classification_project --init --template text_named_entity --ml-backends http://localhost:9090
 ```
 或者启动一个已有的project
 label_studio/server.py  start text_classification_project -b
@@ -62,3 +62,31 @@ label-studio-ml start my_ml_backend
 
 3. 启动自定义的Textbrewer api
 python main_api.py
+
+# 项目文件说明
+```buildoutcfg
+text_classification_project/    #项目目录
+├── completions    标注完成的数据保存的文件夹
+│   ├── 0.json     一条标注完成的数据
+│   ├── 1.json
+├── config.json     项目配置文件
+├── config.xml      标注页面样式显示的配置，可以自己按照自己需求设置，只需要懂一点前端的代码格式即可
+├── export
+│   └── 2020-12-28-11-44-52.zip         #标注完成导出的数据
+├── source.json       存储数据的元信息
+└── tasks.json        一条未标注的数据，数据会导入到这里
+```
+
+# ML后端的文件说明
+只需要修改_wsgi.py 和absa_classifier.py中的代码即可
+```buildoutcfg
+my_ml_backend/
+├── Dockerfile                  可以制作docker镜像
+├── README.md   
+├── _wsgi.py                    函数入口
+├── absa_classifier.py          被_wsgi.py入口函数调用，这个文件主要实现训练和预测2个函数
+├── docker-compose.yml          docker compose启动docker
+├── requirements.txt            自定义requirements
+├── supervisord.conf            supervisor 函数docker中使用
+└── uwsgi.ini                   docker中使用
+```

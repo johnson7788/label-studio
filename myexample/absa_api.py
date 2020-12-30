@@ -227,7 +227,7 @@ def get_imported_data_md5(imported_data):
         md5_list.append(md5_value)
     return md5_list
 
-def import_absa_data(number=10):
+def import_absa_data(channel=['jd','tmall'],number=10):
     """
     导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     :param number:
@@ -240,7 +240,7 @@ def import_absa_data(number=10):
     imported_data = get_tasks(page_size=5000)
     imported_data_md5 = get_imported_data_md5(imported_data)
     #开始从hive数据库拉数据
-    data = get_absa_corpus(number=number)
+    data = get_absa_corpus(channel=channel, number=number)
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
     for one_data in data:
         content = one_data['keyword'] + one_data['text']
@@ -286,11 +286,11 @@ if __name__ == '__main__':
     # import_data()
     # get_tasks()
     # get_tasks(taskid=0)
-    # delete_tasks()
+    delete_tasks()
     # get_completions()
     # delete_completions()
     # health()
     # list_models()
-    train_model()
+    # train_model()
     # predict_model()
     # import_absa_data(number=20)
