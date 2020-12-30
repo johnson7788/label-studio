@@ -14,9 +14,13 @@ import json
 import pprint
 import os
 import hashlib
+import time
+import re
+import zipfile
 
 headers = {'content-type': 'application/json;charset=UTF-8'}
 host = "http://localhost:8080/api/"
+localhost = "http://localhost:8080/api/"
 pp = pprint.PrettyPrinter(indent=4)
 
 
@@ -76,6 +80,13 @@ def get_tasks(taskid=None, page_size=5000, hostname=None):
     results = r.json()
     return results
 
+def get_tasks_host(hostnames):
+    """
+    删除所有task, 数据, 同时会删除已标注的数据
+    :return:
+    """
+    for hostname in hostnames:
+        get_tasks(hostname=hostname)
 
 def delete_tasks(hostname):
     """
@@ -95,19 +106,37 @@ def delete_tasks_host(hostnames):
     for hostname in hostnames:
         delete_tasks(hostname)
 
-def get_completions(taskid=None):
+def get_completions(taskid=None, hostname=None):
     """
     获取完成的task，默认获取所有完成的样本，可以获取部分样本,指定taskid
     :param taskid:
     :return:  返回完成的task的id， task就是样本， {"ids":[0,1]}
     """
+    if hostname != None:
+        host = hostname
     if taskid:
         taskid = str(taskid)
         r = requests.get(host + "tasks/" + taskid + "/completions", headers=headers)
     else:
         r = requests.get(host + "completions", headers=headers)
-    print(r.status_code)
-    print(r.text)
+    # print(r.status_code)
+    # print(r.text)
+    complete_ids = r.json()["ids"]
+    print(f"{host}  标注完成{len(complete_ids)}条")
+    return len(complete_ids)
+
+
+def get_completions_host(hostnames):
+    """
+    删除所有task, 数据, 同时会删除已标注的数据
+    :return:
+    """
+    print(time.strftime("%Y/%m/%d %H:%M:%S",time.localtime()))
+    total = 0
+    for hostname in hostnames:
+        complete_num = get_completions(hostname=hostname)
+        total += complete_num
+    print(f"总共已完成{total}条数据标注")
 
 
 def delete_completions():
@@ -391,6 +420,53 @@ def check_data():
             print(f"发现重复数据:{data['id']}和{repeat_id}")
     print(f"共有重复数据{len(datas)-len(not_repeat_data)}条")
 
+def export_data(hostname=None):
+    """
+    导出数据
+    :param hostname:
+    :return:
+    """
+    dirpath = "/opt/lavector/"
+    if hostname != None:
+        host = hostname
+    #获取下标注完成了多少了数据
+    get_completions(hostname=host)
+    p = '(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*'
+    m = re.search(p, host)
+    hostip = m.group('host')
+    port = m.group('port')
+    url = host + "project/export?format=JSON"
+    local_zipfile = hostip + "_"+ port + "_" + time.strftime("%Y%m%d%H%M%S",time.localtime()) + ".zip"
+    local_jsonfile = hostip +  "_"+ port + ".json"
+    local_zipfile = os.path.join("/tmp",local_zipfile)
+    local_jsonfile = os.path.join(dirpath,local_jsonfile)
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with open(local_zipfile, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+    #创建一个压缩包对象
+    parent_archive = zipfile.ZipFile(local_zipfile)
+    #解压
+    parent_archive.extractall(dirpath)
+    #获取文件夹的压缩包列表
+    namelist = parent_archive.namelist()
+    files = [dirpath+name for name in namelist]
+    parent_archive.close()
+    assert (len(files) ==1), "压缩包里面不止一个文件，请检查"
+    extract_file = files[0]
+    os.rename(extract_file, local_jsonfile)
+    print(f"{host}: 下载完成{local_zipfile}, 解压到{local_jsonfile}")
+
+
+def export_data_host(hostnames):
+    """
+    导出所有标注完的数据
+    :return:
+    """
+    print(time.strftime("%Y/%m/%d %H:%M:%S",time.localtime()))
+    for hostname in hostnames:
+        export_data(hostname=hostname)
 
 if __name__ == '__main__':
     # check_data()
@@ -399,17 +475,23 @@ if __name__ == '__main__':
     # import_data()
     # get_tasks()
     # get_tasks(taskid=0)
-    # delete_tasks(hostname=host)
+    # delete_tasks(hostname="http://192.168.50.119:8090/api/")
     # get_completions()
     # delete_completions()
     # health()
     # list_models()
     # train_model()
     # predict_model()
-    # import_absa_data_host(channel=['jd','tmall'],number=10, hostname=["http://localhost:8080/api/"])
+    # hostnames = ["http://192.168.50.119:8090/api/"]
+    # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostname)
+    # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]
     hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/","http://192.168.50.119:8082/api/",
                  "http://192.168.50.119:8083/api/", "http://192.168.50.119:8084/api/","http://192.168.50.119:8085/api/",
                  "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
                  "http://192.168.50.119:8089/api/"]
     # delete_tasks_host(hostnames=hostnames)
-    import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
+    # import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
+    # get_tasks_host(hostnames=hostnames)
+    get_completions_host(hostnames=hostnames)
+    # export_data(hostname="http://192.168.50.119:8090/api/")
+    # export_data_host(hostnames=hostnames)
