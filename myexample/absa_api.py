@@ -77,16 +77,23 @@ def get_tasks(taskid=None, page_size=5000, hostname=None):
     return results
 
 
-def delete_tasks():
+def delete_tasks(hostname):
     """
     删除所有task, 数据, 同时会删除已标注的数据
     :return:
     """
-    r = requests.delete(host + "tasks", headers=headers)
+    r = requests.delete(hostname + "tasks", headers=headers)
     print("完成，返回code:")
     print(r.status_code)
     print(r.text)
 
+def delete_tasks_host(hostnames):
+    """
+    删除所有task, 数据, 同时会删除已标注的数据
+    :return:
+    """
+    for hostname in hostnames:
+        delete_tasks(hostname)
 
 def get_completions(taskid=None):
     """
@@ -284,7 +291,7 @@ def import_absa_data_host(channel=['jd','tmall'],number=10, hostname=None):
         imported_data.extend(host_imported_data)
     imported_data_md5 = get_imported_data_md5(imported_data)
     #开始从hive数据库拉数据
-    data = get_absa_corpus(channel=['jd','tmall'], requiretags=None, number=10)
+    data = get_absa_corpus(channel=channel, requiretags=None, number=number)
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
     for one_data in data:
         content = one_data['keyword'] + one_data['text']
@@ -309,6 +316,62 @@ def import_absa_data_host(channel=['jd','tmall'],number=10, hostname=None):
         pp.pprint(r.json())
         print(f"共导入主机host{h}中数据{len(vdata)}条")
 
+def import_absa_data_host_first(channel=['jd','tmall'],number=10, hostname=None):
+    """
+    按比例导入不同的host, 导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
+    12月份，功效4000条，其它维度各1500条
+    :param number:
+    :param hostname:平均导入每个host中,列表或None
+    :return:
+    """
+    leibie = ['成分','功效','香味','包装','肤感']
+    leibie_num = [1500,4000,1500,1500,1500]
+    # leibie_num = [2,4,2,2,2]
+    from read_hive import get_absa_corpus
+    #要导入的数据
+    valid_data = []
+    #已经导入的数据, 注意更改获取的样本数目，默认是5000条
+    if hostname != None:
+        host = hostname
+    imported_data = []
+    for h in host:
+        print(f"获取{h}的任务")
+        host_imported_data = get_tasks(page_size=8000,hostname=h)
+        imported_data.extend(host_imported_data)
+    imported_data_md5 = get_imported_data_md5(imported_data)
+    #开始从hive数据库拉数据
+    data = get_absa_corpus(channel=channel, requiretags=None, number=number)
+    # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
+    initial_count = [0,0,0,0,0]
+    for one_data in data:
+        get_index = leibie.index(one_data['wordtype'])
+        if initial_count[get_index] <leibie_num[get_index]:
+            initial_count[get_index] +=1
+        else:
+            continue
+        content = one_data['keyword'] + one_data['text']
+        data_md5 = cal_md5(content)
+        if data_md5 in imported_data_md5:
+            # 数据已经导入到label-studio过了，不需要重新导入
+            continue
+        else:
+            # 没有导入过label-studio，那么加入到valid_data，进行导入
+            # 设置md5字段，方便以后获取
+            one_data['md5'] = data_md5
+            valid_data.append(one_data)
+    print(f"可导入的有效数据是{len(valid_data)}, 有重复数据{len(data)-len(valid_data)} 是无需导入的")
+    if not valid_data:
+        #如果都是已经导入过的数据，直接放弃导入
+        return
+    every_host_number = int(len(valid_data) /len(host))
+    print(f"每个主机导入数据{every_host_number}")
+    vdatas = [valid_data[i:i + every_host_number] for i in range(0, len(valid_data), every_host_number)]
+    for h, vdata in zip(host,vdatas):
+        r = requests.post(h + "project/import", data=json.dumps(vdata), headers=headers)
+        pp.pprint(r.json())
+        print(f"共导入主机host{h}中数据{len(vdata)}条")
+
+
 def check_data():
     """
     查看下已导入的数据
@@ -327,14 +390,16 @@ def check_data():
             repeat_id = not_repeat_id[repeat_idx]
             print(f"发现重复数据:{data['id']}和{repeat_id}")
     print(f"共有重复数据{len(datas)-len(not_repeat_data)}条")
+
+
 if __name__ == '__main__':
     # check_data()
-    setup_config()
+    # setup_config()
     # get_project()
     # import_data()
     # get_tasks()
     # get_tasks(taskid=0)
-    # delete_tasks()
+    # delete_tasks(hostname=host)
     # get_completions()
     # delete_completions()
     # health()
@@ -342,3 +407,9 @@ if __name__ == '__main__':
     # train_model()
     # predict_model()
     # import_absa_data_host(channel=['jd','tmall'],number=10, hostname=["http://localhost:8080/api/"])
+    hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/","http://192.168.50.119:8082/api/",
+                 "http://192.168.50.119:8083/api/", "http://192.168.50.119:8084/api/","http://192.168.50.119:8085/api/",
+                 "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
+                 "http://192.168.50.119:8089/api/"]
+    # delete_tasks_host(hostnames=hostnames)
+    import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
