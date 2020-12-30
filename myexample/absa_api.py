@@ -58,12 +58,14 @@ def get_project():
     pp.pprint(r.json())
 
 
-def get_tasks(taskid=None, page_size=5000):
+def get_tasks(taskid=None, page_size=5000, hostname=None):
     """
     获取task, 获取数据，如果标注完成，返回标注的状态
     :param: taskid 获取第几条数据，如果为None，获取所有数据
     :return:
     """
+    if hostname != None:
+        host = hostname
     if taskid:
         taskid = str(taskid)
         r = requests.get(host + "tasks/" + taskid, headers=headers)
@@ -230,9 +232,11 @@ def get_imported_data_md5(imported_data):
 def import_absa_data(channel=['jd','tmall'],number=10):
     """
     导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
+    12月份，功效4000条，其它维度各1500条
     :param number:
     :return:
     """
+    leibie = ['成分', '功效', '香味', '包装', '肤感']
     from read_hive import get_absa_corpus
     #要导入的数据
     valid_data = []
@@ -240,7 +244,7 @@ def import_absa_data(channel=['jd','tmall'],number=10):
     imported_data = get_tasks(page_size=5000)
     imported_data_md5 = get_imported_data_md5(imported_data)
     #开始从hive数据库拉数据
-    data = get_absa_corpus(channel=channel, number=number)
+    data = get_absa_corpus(channel=['jd','tmall'], requiretags=None, number=10)
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
     for one_data in data:
         content = one_data['keyword'] + one_data['text']
@@ -260,6 +264,51 @@ def import_absa_data(channel=['jd','tmall'],number=10):
     r = requests.post(host + "project/import", data=json.dumps(valid_data), headers=headers)
     pp.pprint(r.json())
     print(f"共导入数据{len(valid_data)}条")
+def import_absa_data_host(channel=['jd','tmall'],number=10, hostname=None):
+    """
+    按比例导入不同的host, 导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
+    12月份，功效4000条，其它维度各1500条
+    :param number:
+    :param hostname:平均导入每个host中,列表或None
+    :return:
+    """
+    leibie = ['成分', '功效', '香味', '包装', '肤感']
+    from read_hive import get_absa_corpus
+    #要导入的数据
+    valid_data = []
+    #已经导入的数据, 注意更改获取的样本数目，默认是5000条
+    if hostname != None:
+        host = hostname
+    imported_data = []
+    for h in host:
+        host_imported_data = get_tasks(page_size=5000,hostname=h)
+        imported_data.extend(host_imported_data)
+    imported_data_md5 = get_imported_data_md5(imported_data)
+    #开始从hive数据库拉数据
+    data = get_absa_corpus(channel=['jd','tmall'], requiretags=None, number=10)
+    # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
+    for one_data in data:
+        content = one_data['keyword'] + one_data['text']
+        data_md5 = cal_md5(content)
+        if data_md5 in imported_data_md5:
+            # 数据已经导入到label-studio过了，不需要重新导入
+            continue
+        else:
+            # 没有导入过label-studio，那么加入到valid_data，进行导入
+            # 设置md5字段，方便以后获取
+            one_data['md5'] = data_md5
+            valid_data.append(one_data)
+    print(f"可导入的有效数据是{len(valid_data)}, 有重复数据{len(data)-len(valid_data)} 是无需导入的")
+    if not valid_data:
+        #如果都是已经导入过的数据，直接放弃导入
+        return
+    every_host_number = int(len(valid_data) /len(host))
+    print(f"每个主机导入数据{every_host_number}")
+    vdatas = [valid_data[i:i + every_host_number] for i in range(0, len(valid_data), every_host_number)]
+    for h, vdata in zip(host,vdatas):
+        r = requests.post(h + "project/import", data=json.dumps(vdata), headers=headers)
+        pp.pprint(r.json())
+        print(f"共导入主机host{h}中数据{len(vdata)}条")
 
 def check_data():
     """
@@ -286,11 +335,11 @@ if __name__ == '__main__':
     # import_data()
     # get_tasks()
     # get_tasks(taskid=0)
-    delete_tasks()
+    # delete_tasks()
     # get_completions()
     # delete_completions()
     # health()
     # list_models()
     # train_model()
     # predict_model()
-    # import_absa_data(number=20)
+    import_absa_data_host(channel=['jd','tmall'],number=10, hostname=["http://localhost:8080/api/"])
