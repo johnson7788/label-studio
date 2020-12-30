@@ -33,13 +33,12 @@ def setup_config():
     <Text name="keyword" value="$keyword"/>
   </View>
   <View style="flex: 30%">
-    <Header value="句子" />
-    <Text name="text" value="$text"/>
-    <Choices name="sentiment" toName="text" choice="single">
-      <Choice value="积极"/>
-      <Choice value="消极"/>
-      <Choice value="中性"/>
-    </Choices>
+      <Labels name="label" toName="text">
+        <Label value="积极" background="red"></Label>
+        <Label value="消极" background="darkorange"></Label>
+        <Label value="中性" background="green"></Label>
+      </Labels>
+      <Text name="text" value="$text"></Text>
   </View>
 </View>
 """}
@@ -330,7 +329,7 @@ def check_data():
     print(f"共有重复数据{len(datas)-len(not_repeat_data)}条")
 if __name__ == '__main__':
     # check_data()
-    # setup_config()
+    setup_config()
     # get_project()
     # import_data()
     # get_tasks()
@@ -342,4 +341,4 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    import_absa_data_host(channel=['jd','tmall'],number=10, hostname=["http://localhost:8080/api/"])
+    # import_absa_data_host(channel=['jd','tmall'],number=10, hostname=["http://localhost:8080/api/"])

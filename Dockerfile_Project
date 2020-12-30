@@ -1,0 +1,19 @@
+# Building the main container
+FROM label-studio:base
+
+WORKDIR /label-studio
+
+ENV PORT="8080"
+ENV PROJECT_NAME="text_classification_project"
+ENV HOST=0.0.0.0
+ENV PROTOCOL=http://
+# basic auth params
+ENV USERNAME=""
+ENV PASSWORD=""
+
+EXPOSE ${PORT}
+
+COPY . /label-studio
+COPY text_classification_project /label-studio
+RUN python setup.py develop
+CMD ["./tools/run.sh"]
