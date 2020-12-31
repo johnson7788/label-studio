@@ -500,9 +500,9 @@ if __name__ == '__main__':
                  "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
                  "http://192.168.50.119:8089/api/"]
     # delete_tasks_host(hostnames=hostnames)
-    setup_config_host(hostnames=hostnames)
+    # setup_config_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
-    # get_completions_host(hostnames=hostnames)
+    get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames)
