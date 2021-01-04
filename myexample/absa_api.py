@@ -30,27 +30,28 @@ def setup_config(hostname=None):
     :return:
     """
     data = {"label_config":
-"""
-<View>
-  <View style="flex: 30%; color:red">
-    <Header value="$wordtype" />
-    <Text name="keyword" value="$keyword"/>
-  </View>
-  <View style="flex: 30%">
-      <Labels name="label" toName="text">
-        <Label value="积极" background="red"></Label>
-        <Label value="消极" background="darkorange"></Label>
-        <Label value="中性" background="green"></Label>
-      </Labels>
-      <Text name="text" value="$text"></Text>
-  </View>
-</View>
-"""}
+                """
+                <View>
+                  <View style="flex: 30%; color:red">
+                    <Header value="$wordtype" />
+                    <Text name="keyword" value="$keyword"/>
+                  </View>
+                  <View style="flex: 30%">
+                      <Labels name="label" toName="text">
+                        <Label value="积极" background="red"></Label>
+                        <Label value="消极" background="darkorange"></Label>
+                        <Label value="中性" background="green"></Label>
+                      </Labels>
+                      <Text name="text" value="$text"></Text>
+                  </View>
+                </View>
+                """}
     if hostname != None:
         host = hostname
     r = requests.post(host + "project/config", data=json.dumps(data), headers=headers)
     print(r.status_code)
     print(r.text)
+
 
 def setup_config_host(hostnames):
     """
@@ -59,6 +60,7 @@ def setup_config_host(hostnames):
     """
     for hostname in hostnames:
         setup_config(hostname=hostname)
+
 
 def get_project():
     """
@@ -89,6 +91,7 @@ def get_tasks(taskid=None, page_size=5000, hostname=None):
     results = r.json()
     return results
 
+
 def get_tasks_host(hostnames):
     """
     删除所有task, 数据, 同时会删除已标注的数据
@@ -96,6 +99,7 @@ def get_tasks_host(hostnames):
     """
     for hostname in hostnames:
         get_tasks(hostname=hostname)
+
 
 def delete_tasks(hostname):
     """
@@ -107,6 +111,7 @@ def delete_tasks(hostname):
     print(r.status_code)
     print(r.text)
 
+
 def delete_tasks_host(hostnames):
     """
     删除所有task, 数据, 同时会删除已标注的数据
@@ -114,6 +119,7 @@ def delete_tasks_host(hostnames):
     """
     for hostname in hostnames:
         delete_tasks(hostname)
+
 
 def get_completions(taskid=None, hostname=None):
     """
@@ -140,7 +146,7 @@ def get_completions_host(hostnames):
     删除所有task, 数据, 同时会删除已标注的数据
     :return:
     """
-    print(time.strftime("%Y/%m/%d %H:%M:%S",time.localtime()))
+    print(time.strftime("%Y/%m/%d %H:%M:%S", time.localtime()))
     total = 0
     for hostname in hostnames:
         complete_num = get_completions(hostname=hostname)
@@ -166,28 +172,32 @@ def import_data():
     :return:
     """
     data = [{'channel': 'jd', 'keyword': '芦荟', 'md5': '503d422e3c12b9bf33d5833a84aea219',
-      'text': '套装设计很贴心，效果是不错的。芦荟镇定效果可以，刺鼻味是有的。操作容易-效果不错。缺点是漂色不到半月，颜色又开始悄咪咪的恢复了，估计2-3周要做一次。仅个人经验。', 'wordtype': '成分'},
-     {'channel': 'jd', 'keyword': '海藻', 'md5': 'ec57fe5052e5304e4dccb05f438e3c0b', 'text': '孕期的时候就使用它家的海藻面膜，挺好用的',
-      'wordtype': '成分'},
-     {'channel': 'jd', 'keyword': '控油', 'md5': 'f3d1857051db73f637255f0db14686d0', 'text': '泡沫数量：666666产品香味：麝香控油效果：#',
-      'wordtype': '功效'},
-     {'channel': 'jd', 'keyword': '麝香', 'md5': 'b1d0dda097bdb011e7cb19887e51c89b', 'text': '泡沫数量：666666产品香味：麝香控油效果：#',
-      'wordtype': '成分'}, {'channel': 'jd', 'keyword': '保湿', 'md5': 'f40089e74b1cf93dac1fbb2d1589fb36',
-                          'text': '这是第三购买了，碰上京东七夕活动也趁机买下，原来虽然还没有用完，因为活动就多囤点，面膜总是要用的反正，一直买的是这个牌子，用起来还是很放心的，没有酒精味，保湿效果很好，就是价钱小贵了些，如果平时再优惠点就更好了，不过这次没有送有点遗憾。',
-                          'wordtype': '功效'},
-     {'channel': 'jd', 'keyword': '酒精', 'md5': '11187ff91e2cea54bebba96d3b265e92',
-      'text': '这是第三购买了，碰上京东七夕活动也趁机买下，原来虽然还没有用完，因为活动就多囤点，面膜总是要用的反正，一直买的是这个牌子，用起来还是很放心的，没有酒精味，保湿效果很好，就是价钱小贵了些，如果平时再优惠点就更好了，不过这次没有送有点遗憾。',
-      'wordtype': '成分'}, {'channel': 'jd', 'keyword': '没有酒精', 'md5': '83d8fa49556003e9e2662f8f410c7865',
-                          'text': '这是第三购买了，碰上京东七夕活动也趁机买下，原来虽然还没有用完，因为活动就多囤点，面膜总是要用的反正，一直买的是这个牌子，用起来还是很放心的，没有酒精味，保湿效果很好，就是价钱小贵了些，如果平时再优惠点就更好了，不过这次没有送有点遗憾。',
-                          'wordtype': '成分'},
-     {'channel': 'jd', 'keyword': '质感', 'md5': 'd1549cc845f00afcb2e200377d296444',
-      'text': '产品质感：打开一股特殊的味道，有点像酒精味，也有点像发酵的味道适合肤质：适合肤质：适合 敏感肌使用补水效果：补水效果不错。贴合效果：面膜大小正好，贴合面部非常好使用感受：总体来说还可以。本人敏感皮肤，用着不错',
-      'wordtype': '功效'}, {'channel': 'jd', 'keyword': '补水', 'md5': 'e09d37df17e5d972d46f57c11950e4e4',
-                          'text': '产品质感：打开一股特殊的味道，有点像酒精味，也有点像发酵的味道适合肤质：适合肤质：适合 敏感肌使用补水效果：补水效果不错。贴合效果：面膜大小正好，贴合面部非常好使用感受：总体来说还可以。本人敏感皮肤，用着不错',
-                          'wordtype': '功效'},
-     {'channel': 'jd', 'keyword': '酒精', 'md5': 'cec263f850791af51fc447f701a076e5',
-      'text': '产品质感：打开一股特殊的味道，有点像酒精味，也有点像发酵的味道适合肤质：适合肤质：适合 敏感肌使用补水效果：补水效果不错。贴合效果：面膜大小正好，贴合面部非常好使用感受：总体来说还可以。本人敏感皮肤，用着不错',
-      'wordtype': '成分'}]
+             'text': '套装设计很贴心，效果是不错的。芦荟镇定效果可以，刺鼻味是有的。操作容易-效果不错。缺点是漂色不到半月，颜色又开始悄咪咪的恢复了，估计2-3周要做一次。仅个人经验。',
+             'wordtype': '成分'},
+            {'channel': 'jd', 'keyword': '海藻', 'md5': 'ec57fe5052e5304e4dccb05f438e3c0b',
+             'text': '孕期的时候就使用它家的海藻面膜，挺好用的',
+             'wordtype': '成分'},
+            {'channel': 'jd', 'keyword': '控油', 'md5': 'f3d1857051db73f637255f0db14686d0',
+             'text': '泡沫数量：666666产品香味：麝香控油效果：#',
+             'wordtype': '功效'},
+            {'channel': 'jd', 'keyword': '麝香', 'md5': 'b1d0dda097bdb011e7cb19887e51c89b',
+             'text': '泡沫数量：666666产品香味：麝香控油效果：#',
+             'wordtype': '成分'}, {'channel': 'jd', 'keyword': '保湿', 'md5': 'f40089e74b1cf93dac1fbb2d1589fb36',
+                                 'text': '这是第三购买了，碰上京东七夕活动也趁机买下，原来虽然还没有用完，因为活动就多囤点，面膜总是要用的反正，一直买的是这个牌子，用起来还是很放心的，没有酒精味，保湿效果很好，就是价钱小贵了些，如果平时再优惠点就更好了，不过这次没有送有点遗憾。',
+                                 'wordtype': '功效'},
+            {'channel': 'jd', 'keyword': '酒精', 'md5': '11187ff91e2cea54bebba96d3b265e92',
+             'text': '这是第三购买了，碰上京东七夕活动也趁机买下，原来虽然还没有用完，因为活动就多囤点，面膜总是要用的反正，一直买的是这个牌子，用起来还是很放心的，没有酒精味，保湿效果很好，就是价钱小贵了些，如果平时再优惠点就更好了，不过这次没有送有点遗憾。',
+             'wordtype': '成分'}, {'channel': 'jd', 'keyword': '没有酒精', 'md5': '83d8fa49556003e9e2662f8f410c7865',
+                                 'text': '这是第三购买了，碰上京东七夕活动也趁机买下，原来虽然还没有用完，因为活动就多囤点，面膜总是要用的反正，一直买的是这个牌子，用起来还是很放心的，没有酒精味，保湿效果很好，就是价钱小贵了些，如果平时再优惠点就更好了，不过这次没有送有点遗憾。',
+                                 'wordtype': '成分'},
+            {'channel': 'jd', 'keyword': '质感', 'md5': 'd1549cc845f00afcb2e200377d296444',
+             'text': '产品质感：打开一股特殊的味道，有点像酒精味，也有点像发酵的味道适合肤质：适合肤质：适合 敏感肌使用补水效果：补水效果不错。贴合效果：面膜大小正好，贴合面部非常好使用感受：总体来说还可以。本人敏感皮肤，用着不错',
+             'wordtype': '功效'}, {'channel': 'jd', 'keyword': '补水', 'md5': 'e09d37df17e5d972d46f57c11950e4e4',
+                                 'text': '产品质感：打开一股特殊的味道，有点像酒精味，也有点像发酵的味道适合肤质：适合肤质：适合 敏感肌使用补水效果：补水效果不错。贴合效果：面膜大小正好，贴合面部非常好使用感受：总体来说还可以。本人敏感皮肤，用着不错',
+                                 'wordtype': '功效'},
+            {'channel': 'jd', 'keyword': '酒精', 'md5': 'cec263f850791af51fc447f701a076e5',
+             'text': '产品质感：打开一股特殊的味道，有点像酒精味，也有点像发酵的味道适合肤质：适合肤质：适合 敏感肌使用补水效果：补水效果不错。贴合效果：面膜大小正好，贴合面部非常好使用感受：总体来说还可以。本人敏感皮肤，用着不错',
+             'wordtype': '成分'}]
 
     r = requests.post(host + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
@@ -245,6 +255,7 @@ def predict_model():
     print(r.status_code)
     print(r.text)
 
+
 def cal_md5(content):
     """
     计算content字符串的md5
@@ -257,6 +268,7 @@ def cal_md5(content):
     md5 = result.hexdigest()
     return md5
 
+
 def get_imported_data_md5(imported_data):
     """
     对已经导入的数据，计算所有md5，如果data['md5']存在，直接过去，否则用keyword+text计算md5
@@ -267,13 +279,14 @@ def get_imported_data_md5(imported_data):
         data = res['data']
         md5_value = data.get('md5')
         if not md5_value:
-            #说明不存在md5这个字段，开始计算
+            # 说明不存在md5这个字段，开始计算
             content = data['keyword'] + data['text']
             md5_value = cal_md5(content=content)
         md5_list.append(md5_value)
     return md5_list
 
-def import_absa_data(channel=['jd','tmall'],number=10):
+
+def import_absa_data(channel=['jd', 'tmall'], number=10):
     """
     导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     12月份，功效4000条，其它维度各1500条
@@ -282,13 +295,13 @@ def import_absa_data(channel=['jd','tmall'],number=10):
     """
     leibie = ['成分', '功效', '香味', '包装', '肤感']
     from read_hive import get_absa_corpus
-    #要导入的数据
+    # 要导入的数据
     valid_data = []
-    #已经导入的数据, 注意更改获取的样本数目，默认是5000条
+    # 已经导入的数据, 注意更改获取的样本数目，默认是5000条
     imported_data = get_tasks(page_size=5000)
     imported_data_md5 = get_imported_data_md5(imported_data)
-    #开始从hive数据库拉数据
-    data = get_absa_corpus(channel=['jd','tmall'], requiretags=None, number=10)
+    # 开始从hive数据库拉数据
+    data = get_absa_corpus(channel=['jd', 'tmall'], requiretags=None, number=10)
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
     for one_data in data:
         content = one_data['keyword'] + one_data['text']
@@ -301,14 +314,16 @@ def import_absa_data(channel=['jd','tmall'],number=10):
             # 设置md5字段，方便以后获取
             one_data['md5'] = data_md5
             valid_data.append(one_data)
-    print(f"可导入的有效数据是{len(valid_data)}, 有重复数据{len(data)-len(valid_data)} 是无需导入的")
+    print(f"可导入的有效数据是{len(valid_data)}, 有重复数据{len(data) - len(valid_data)} 是无需导入的")
     if not valid_data:
-        #如果都是已经导入过的数据，直接放弃导入
+        # 如果都是已经导入过的数据，直接放弃导入
         return
     r = requests.post(host + "project/import", data=json.dumps(valid_data), headers=headers)
     pp.pprint(r.json())
     print(f"共导入数据{len(valid_data)}条")
-def import_absa_data_host(channel=['jd','tmall'],number=10, hostname=None):
+
+
+def import_absa_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
     """
     按比例导入不同的host, 导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     12月份，功效4000条，其它维度各1500条
@@ -318,17 +333,17 @@ def import_absa_data_host(channel=['jd','tmall'],number=10, hostname=None):
     """
     leibie = ['成分', '功效', '香味', '包装', '肤感']
     from read_hive import get_absa_corpus
-    #要导入的数据
+    # 要导入的数据
     valid_data = []
-    #已经导入的数据, 注意更改获取的样本数目，默认是5000条
+    # 已经导入的数据, 注意更改获取的样本数目，默认是5000条
     if hostname != None:
         host = hostname
     imported_data = []
     for h in host:
-        host_imported_data = get_tasks(page_size=5000,hostname=h)
+        host_imported_data = get_tasks(page_size=5000, hostname=h)
         imported_data.extend(host_imported_data)
     imported_data_md5 = get_imported_data_md5(imported_data)
-    #开始从hive数据库拉数据
+    # 开始从hive数据库拉数据
     data = get_absa_corpus(channel=channel, requiretags=None, number=number)
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
     for one_data in data:
@@ -342,19 +357,20 @@ def import_absa_data_host(channel=['jd','tmall'],number=10, hostname=None):
             # 设置md5字段，方便以后获取
             one_data['md5'] = data_md5
             valid_data.append(one_data)
-    print(f"可导入的有效数据是{len(valid_data)}, 有重复数据{len(data)-len(valid_data)} 是无需导入的")
+    print(f"可导入的有效数据是{len(valid_data)}, 有重复数据{len(data) - len(valid_data)} 是无需导入的")
     if not valid_data:
-        #如果都是已经导入过的数据，直接放弃导入
+        # 如果都是已经导入过的数据，直接放弃导入
         return
-    every_host_number = int(len(valid_data) /len(host))
+    every_host_number = int(len(valid_data) / len(host))
     print(f"每个主机导入数据{every_host_number}")
     vdatas = [valid_data[i:i + every_host_number] for i in range(0, len(valid_data), every_host_number)]
-    for h, vdata in zip(host,vdatas):
+    for h, vdata in zip(host, vdatas):
         r = requests.post(h + "project/import", data=json.dumps(vdata), headers=headers)
         pp.pprint(r.json())
         print(f"共导入主机host{h}中数据{len(vdata)}条")
 
-def import_absa_data_host_first(channel=['jd','tmall'],number=10, hostname=None):
+
+def import_absa_data_host_first(channel=['jd', 'tmall'], number=10, hostname=None):
     """
     按比例导入不同的host, 导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     12月份，功效4000条，其它维度各1500条
@@ -362,29 +378,29 @@ def import_absa_data_host_first(channel=['jd','tmall'],number=10, hostname=None)
     :param hostname:平均导入每个host中,列表或None
     :return:
     """
-    leibie = ['成分','功效','香味','包装','肤感']
-    leibie_num = [1500,4000,1500,1500,1500]
+    leibie = ['成分', '功效', '香味', '包装', '肤感']
+    leibie_num = [1500, 4000, 1500, 1500, 1500]
     # leibie_num = [2,4,2,2,2]
     from read_hive import get_absa_corpus
-    #要导入的数据
+    # 要导入的数据
     valid_data = []
-    #已经导入的数据, 注意更改获取的样本数目，默认是5000条
+    # 已经导入的数据, 注意更改获取的样本数目，默认是5000条
     if hostname != None:
         host = hostname
     imported_data = []
     for h in host:
         print(f"获取{h}的任务")
-        host_imported_data = get_tasks(page_size=8000,hostname=h)
+        host_imported_data = get_tasks(page_size=8000, hostname=h)
         imported_data.extend(host_imported_data)
     imported_data_md5 = get_imported_data_md5(imported_data)
-    #开始从hive数据库拉数据
+    # 开始从hive数据库拉数据
     data = get_absa_corpus(channel=channel, requiretags=None, number=number)
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
-    initial_count = [0,0,0,0,0]
+    initial_count = [0, 0, 0, 0, 0]
     for one_data in data:
         get_index = leibie.index(one_data['wordtype'])
-        if initial_count[get_index] <leibie_num[get_index]:
-            initial_count[get_index] +=1
+        if initial_count[get_index] < leibie_num[get_index]:
+            initial_count[get_index] += 1
         else:
             continue
         content = one_data['keyword'] + one_data['text']
@@ -397,14 +413,14 @@ def import_absa_data_host_first(channel=['jd','tmall'],number=10, hostname=None)
             # 设置md5字段，方便以后获取
             one_data['md5'] = data_md5
             valid_data.append(one_data)
-    print(f"可导入的有效数据是{len(valid_data)}, 有重复数据{len(data)-len(valid_data)} 是无需导入的")
+    print(f"可导入的有效数据是{len(valid_data)}, 有重复数据{len(data) - len(valid_data)} 是无需导入的")
     if not valid_data:
-        #如果都是已经导入过的数据，直接放弃导入
+        # 如果都是已经导入过的数据，直接放弃导入
         return
-    every_host_number = int(len(valid_data) /len(host))
+    every_host_number = int(len(valid_data) / len(host))
     print(f"每个主机导入数据{every_host_number}")
     vdatas = [valid_data[i:i + every_host_number] for i in range(0, len(valid_data), every_host_number)]
-    for h, vdata in zip(host,vdatas):
+    for h, vdata in zip(host, vdatas):
         r = requests.post(h + "project/import", data=json.dumps(vdata), headers=headers)
         pp.pprint(r.json())
         print(f"共导入主机host{h}中数据{len(vdata)}条")
@@ -427,7 +443,8 @@ def check_data():
             repeat_idx = not_repeat_data.index(content)
             repeat_id = not_repeat_id[repeat_idx]
             print(f"发现重复数据:{data['id']}和{repeat_id}")
-    print(f"共有重复数据{len(datas)-len(not_repeat_data)}条")
+    print(f"共有重复数据{len(datas) - len(not_repeat_data)}条")
+
 
 def export_data(hostname=None):
     """
@@ -438,31 +455,31 @@ def export_data(hostname=None):
     dirpath = "/opt/lavector/"
     if hostname != None:
         host = hostname
-    #获取下标注完成了多少了数据
+    # 获取下标注完成了多少了数据
     get_completions(hostname=host)
     p = '(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*'
     m = re.search(p, host)
     hostip = m.group('host')
     port = m.group('port')
     url = host + "project/export?format=JSON"
-    local_zipfile = hostip + "_"+ port + "_" + time.strftime("%Y%m%d%H%M%S",time.localtime()) + ".zip"
-    local_jsonfile = hostip +  "_"+ port + ".json"
-    local_zipfile = os.path.join("/tmp",local_zipfile)
-    local_jsonfile = os.path.join(dirpath,local_jsonfile)
+    local_zipfile = hostip + "_" + port + "_" + time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".zip"
+    local_jsonfile = hostip + "_" + port + ".json"
+    local_zipfile = os.path.join("/tmp", local_zipfile)
+    local_jsonfile = os.path.join(dirpath, local_jsonfile)
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
         with open(local_zipfile, 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
-    #创建一个压缩包对象
+    # 创建一个压缩包对象
     parent_archive = zipfile.ZipFile(local_zipfile)
-    #解压
+    # 解压
     parent_archive.extractall(dirpath)
-    #获取文件夹的压缩包列表
+    # 获取文件夹的压缩包列表
     namelist = parent_archive.namelist()
-    files = [dirpath+name for name in namelist]
+    files = [dirpath + name for name in namelist]
     parent_archive.close()
-    assert (len(files) ==1), "压缩包里面不止一个文件，请检查"
+    assert (len(files) == 1), "压缩包里面不止一个文件，请检查"
     extract_file = files[0]
     os.rename(extract_file, local_jsonfile)
     print(f"{host}: 下载完成{local_zipfile}, 解压到{local_jsonfile}")
@@ -473,25 +490,69 @@ def export_data_host(hostnames):
     导出所有标注完的数据
     :return:
     """
-    print(time.strftime("%Y/%m/%d %H:%M:%S",time.localtime()))
+    print(time.strftime("%Y/%m/%d %H:%M:%S", time.localtime()))
     for hostname in hostnames:
         export_data(hostname=hostname)
+
 
 def import_dev_data(hostname):
     """
     导入模型的开发数据集
     :return:
     """
-    testfile = "/Users/admin/git/TextBrewer/huazhuang/data_root_dir/newcos/dev.json"
+    # testfile = "/Users/admin/git/TextBrewer/huazhuang/data_root_dir/newcos/dev.json"
+    testfile = "/Users/admin/git/TextBrewer/huazhuang/utils/wrong.json"
     with open(testfile, 'r') as f:
         # 格式是[(text, keyword, labels)]
         loaddata = json.load(f)
     data = []
     for d in loaddata:
-        one_data = {'channel': 'jd','keyword': d[1],'text': d[0], 'wordtype': '未知'}
+        # one_data = {'channel': 'jd','keyword': d[1],'text': d[0], 'wordtype': '未知'}
+        one_data = {'data': {'channel': 'jd', 'keyword': d[1], 'text': d[0], 'wordtype': '未知'},
+                    "completions": [
+                        {
+                            "result": [  # 标注结果, 这里对应的是一个人标注的结果，里面可能进行了多个标注
+                                {
+                                    "from_name": "label",
+                                    "to_name": "text",
+                                    "type": "labels",
+                                    "value": {
+                                        "end": d[3],
+                                        "labels": [
+                                            "中性"
+                                        ],
+                                        "start": d[2],
+                                        "text": d[1]
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    "predictions": [
+                        {
+                            "model_version": "macbert1.0",
+                            "result": [
+                                {
+                                    "from_name": "label",
+                                    "to_name": "text",
+                                    "type": "labels",
+                                    "value": {
+                                        "end": d[3],
+                                        "labels": [
+                                            "中性"
+                                        ],
+                                        "start": d[2],
+                                        "text": d[1]
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                    }
         data.append(one_data)
     r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
+
 
 if __name__ == '__main__':
     # check_data()
@@ -500,14 +561,15 @@ if __name__ == '__main__':
     # import_data()
     # get_tasks()
     # get_tasks(taskid=0)
-    delete_tasks(hostname="http://192.168.50.119:8090/api/")
+    # delete_tasks(hostname="http://192.168.50.119:8090/api/")
     # get_completions()
     # delete_completions()
     # health()
     # list_models()
     # train_model()
     # predict_model()
-    hostnames = ["http://192.168.50.119:8090/api/"]
+    # hostnames = ["http://192.168.50.119:8090/api/"]
+    hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
     # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]
@@ -515,13 +577,11 @@ if __name__ == '__main__':
     #              "http://192.168.50.119:8083/api/", "http://192.168.50.119:8084/api/","http://192.168.50.119:8085/api/",
     #              "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
     #              "http://192.168.50.119:8089/api/"]
-    # delete_tasks_host(hostnames=hostnames)
     # setup_config_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames)
+    delete_tasks_host(hostnames=hostnames)
     import_dev_data(hostname=hostnames[0])
-
-
