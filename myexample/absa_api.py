@@ -508,7 +508,7 @@ def import_dev_data(hostname):
     data = []
     for d in loaddata:
         # one_data = {'channel': 'jd','keyword': d[1],'text': d[0], 'wordtype': '未知'}
-        one_data = {'data': {'channel': 'jd', 'keyword': d[1], 'text': d[0], 'wordtype': '未知'},
+        one_data = {'data': {'channel': 'jd', 'keyword': d[1], 'text': d[0], 'wordtype': '未知', "meta_info": {"location": "North Pole"}},
                     "completions": [
                         {
                             "result": [  # 标注结果, 这里对应的是一个人标注的结果，里面可能进行了多个标注
@@ -519,7 +519,7 @@ def import_dev_data(hostname):
                                     "value": {
                                         "end": d[3],
                                         "labels": [
-                                            "中性"
+                                            d[4]
                                         ],
                                         "start": d[2],
                                         "text": d[1]
@@ -528,26 +528,6 @@ def import_dev_data(hostname):
                             ]
                         }
                     ],
-                    "predictions": [
-                        {
-                            "model_version": "macbert1.0",
-                            "result": [
-                                {
-                                    "from_name": "label",
-                                    "to_name": "text",
-                                    "type": "labels",
-                                    "value": {
-                                        "end": d[3],
-                                        "labels": [
-                                            "中性"
-                                        ],
-                                        "start": d[2],
-                                        "text": d[1]
-                                    }
-                                }
-                            ]
-                        }
-                    ]
                     }
         data.append(one_data)
     r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
@@ -568,8 +548,8 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    # hostnames = ["http://192.168.50.119:8090/api/"]
-    hostnames = ["http://127.0.0.1:8080/api/"]
+    hostnames = ["http://192.168.50.119:8090/api/"]
+    # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
     # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]
