@@ -379,7 +379,7 @@ def import_absa_data_host_first(channel=['jd', 'tmall'], number=10, hostname=Non
     :return:
     """
     leibie = ['成分', '功效', '香味', '包装', '肤感']
-    leibie_num = [1500, 4000, 1500, 1500, 1500]
+    leibie_num = [100, 100, 100, 100, 100]
     # leibie_num = [2,4,2,2,2]
     from read_hive import get_absa_corpus
     # 要导入的数据
@@ -413,7 +413,7 @@ def import_absa_data_host_first(channel=['jd', 'tmall'], number=10, hostname=Non
             # 设置md5字段，方便以后获取
             one_data['md5'] = data_md5
             valid_data.append(one_data)
-    print(f"可导入的有效数据是{len(valid_data)}, 有重复数据{len(data) - len(valid_data)} 是无需导入的")
+    print(f"可导入的有效数据是{len(valid_data)}, 有重复数据或不需要数据{len(data) - len(valid_data)} 是无需导入的")
     if not valid_data:
         # 如果都是已经导入过的数据，直接放弃导入
         return
@@ -548,7 +548,8 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    hostnames = ["http://192.168.50.119:8090/api/"]
+    # hostnames = ["http://192.168.50.119:8090/api/"]
+    hostnames = ["http://192.168.50.119:8080/api/"]
     # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
@@ -564,4 +565,5 @@ if __name__ == '__main__':
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames)
     delete_tasks_host(hostnames=hostnames)
-    import_dev_data(hostname=hostnames[0])
+    import_absa_data_host_first(channel=['jd','tmall'],number=200, hostname=hostnames)
+    # import_dev_data(hostname=hostnames[0])
