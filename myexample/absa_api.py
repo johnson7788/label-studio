@@ -121,7 +121,7 @@ def delete_tasks_host(hostnames):
         delete_tasks(hostname)
 
 
-def get_completions(taskid=None, hostname=None):
+def get_completions(taskid=None, hostname=None, proxy=False):
     """
     获取完成的task，默认获取所有完成的样本，可以获取部分样本,指定taskid
     :param taskid:
@@ -131,9 +131,17 @@ def get_completions(taskid=None, hostname=None):
         host = hostname
     if taskid:
         taskid = str(taskid)
-        r = requests.get(host + "tasks/" + taskid + "/completions", headers=headers)
+        if proxy:
+            r = requests.get(host + "tasks/" + taskid + "/completions", headers=headers,
+                             proxies=dict(http='socks5://127.0.0.1:9080', https='socks5://127.0.0.1:9080'))
+        else:
+            r = requests.get(host + "tasks/" + taskid + "/completions", headers=headers)
     else:
-        r = requests.get(host + "completions", headers=headers)
+        if proxy:
+            r = requests.get(host + "completions", headers=headers,
+                             proxies=dict(http='socks5://127.0.0.1:9080', https='socks5://127.0.0.1:9080'))
+        else:
+            r = requests.get(host + "completions", headers=headers)
     # print(r.status_code)
     # print(r.text)
     complete_ids = r.json()["ids"]
@@ -446,31 +454,41 @@ def check_data():
     print(f"共有重复数据{len(datas) - len(not_repeat_data)}条")
 
 
-def export_data(hostname=None):
+def export_data(hostname=None, dirpath="/opt/lavector/", jsonfile=None, proxy=False):
     """
     导出数据
     :param hostname:
     :return:
     """
-    dirpath = "/opt/lavector/"
     if hostname != None:
         host = hostname
     # 获取下标注完成了多少了数据
-    get_completions(hostname=host)
+    get_completions(hostname=host, proxy=proxy)
     p = '(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*'
     m = re.search(p, host)
     hostip = m.group('host')
     port = m.group('port')
     url = host + "project/export?format=JSON"
     local_zipfile = hostip + "_" + port + "_" + time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".zip"
-    local_jsonfile = hostip + "_" + port + ".json"
     local_zipfile = os.path.join("/tmp", local_zipfile)
-    local_jsonfile = os.path.join(dirpath, local_jsonfile)
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()
-        with open(local_zipfile, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
+    if jsonfile is None:
+        local_jsonfile = hostip + "_" + port + ".json"
+        local_jsonfile = os.path.join(dirpath, local_jsonfile)
+    else:
+        local_jsonfile = os.path.join(dirpath, jsonfile)
+    if proxy:
+        with requests.get(url, stream=True,
+                          proxies=dict(http='socks5://127.0.0.1:9080', https='socks5://127.0.0.1:9080')) as r:
+            r.raise_for_status()
+            with open(local_zipfile, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+    else:
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with open(local_zipfile, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
     # 创建一个压缩包对象
     parent_archive = zipfile.ZipFile(local_zipfile)
     # 解压
@@ -483,6 +501,7 @@ def export_data(hostname=None):
     extract_file = files[0]
     os.rename(extract_file, local_jsonfile)
     print(f"{host}: 下载完成{local_zipfile}, 解压到{local_jsonfile}")
+    return local_jsonfile
 
 
 def export_data_host(hostnames):
@@ -508,7 +527,8 @@ def import_dev_data(hostname):
     data = []
     for d in loaddata:
         # one_data = {'channel': 'jd','keyword': d[1],'text': d[0], 'wordtype': '未知'}
-        one_data = {'data': {'channel': 'jd', 'keyword': d[1], 'text': d[0], 'wordtype': '未知', "meta_info": {"location": "North Pole"}},
+        one_data = {'data': {'channel': 'jd', 'keyword': d[1], 'text': d[0], 'wordtype': '未知',
+                             "meta_info": {"location": "North Pole"}},
                     "completions": [
                         {
                             "result": [  # 标注结果, 这里对应的是一个人标注的结果，里面可能进行了多个标注
@@ -534,6 +554,93 @@ def import_dev_data(hostname):
     pp.pprint(r.json())
 
 
+def import_excel_data(hostname):
+    """
+    导入模型人工标注后的excel模型, excel包含字段
+    	Text	                Keyword	        Label	    Predict	    Location	    Probability	    Check
+        控油效果：不错产品香味：很香泡沫数量：中适合发质：中性。。。	控油	中性	积极	(0, 2)	0.720	积极
+    :return:
+    """
+    import pandas as pd
+    testfile = "/Users/admin/Desktop/full_wrong.xlsx"
+    df = pd.read_excel(testfile)
+    data = []
+    # 合并相同的Text，里面有n个关键字
+    previous_keyword = None
+    previsou_text = None
+    result = []
+    last_data = None
+    for idx, d in df.iterrows():
+        # one_data = {'channel': 'jd','keyword': d[1],'text': d[0], 'wordtype': '未知'}
+        if d["Check"] == "无法判断":
+            d["Check"] = "中性"
+        # start和end必须是数字，否则无法显示
+        one_result = {"from_name": "label",
+                  "to_name": "text",
+                  "type": "labels",
+                  "value": {
+                      "end": int(d["location"].lstrip('(').rstrip(')').split(',')[1]),
+                      "labels": [
+                          d["Check"]
+                      ],
+                      "start": int(d["location"].lstrip('(').rstrip(')').split(',')[0]),
+                      "text": d["keyword"]
+                  }
+                  }
+        # 初始化
+        if previous_keyword is None and previsou_text is None:
+            previous_keyword = d["keyword"]
+            previsou_text = d["text"]
+            last_data = {'data': {'channel': 'jd', 'keyword': d["keyword"], 'text': d["text"], 'wordtype': d["wordtype"],
+                                 "meta_info": {"location": "North Pole"}},
+                        "completions": [
+                            {
+                                "result": result  # 标注结果, 这里对应的是一个人标注的结果，里面可能进行了多个标注
+                            }
+                        ],
+                        }
+            result.append(one_result)
+            continue
+        elif previous_keyword == d["keyword"] and previsou_text == d["text"]:
+            # 需要判断下一个句子的关键和text，如果相邻的2个句子和关键字是相同的，说明是一个句子中有几个关键词, 需要修改completions中的result
+            result.append(one_result)
+            #更新一下上一句的keyword
+            previous_keyword = d["keyword"]
+            previsou_text = d["text"]
+            #更新last_data
+            last_data = {'data': {'channel': 'jd', 'keyword': d["keyword"], 'text': d["text"], 'wordtype': d["wordtype"],
+                                 "meta_info": {"location": "North Pole"}},
+                        "completions": [
+                            {
+                                "result": result  # 标注结果, 这里对应的是一个人标注的结果，里面可能进行了多个标注
+                            }
+                        ],
+                        }
+            # 把下一句也添加进来, 如果不是最后一个元素，才继续循环下一句
+            if idx == (len(df)-1):
+                data.append(last_data)
+        else:
+            #把上一个词添加进去
+            data.append(last_data)
+            previous_keyword = d["keyword"]
+            previsou_text = d["text"]
+            #重置result,添加完成后
+            result = []
+            result.append(one_result)
+            last_data = {'data': {'channel': 'jd', 'keyword': d["keyword"], 'text': d["text"], 'wordtype': d["wordtype"],
+                                 "meta_info": {"location": "North Pole"}},
+                        "completions": [
+                            {
+                                "result": result  # 标注结果, 这里对应的是一个人标注的结果，里面可能进行了多个标注
+                            }
+                        ],
+                        }
+            if idx == (len(df)-1):
+                #最后一个元素也加进去
+                data.append(last_data)
+    r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
+    pp.pprint(r.json())
+
 if __name__ == '__main__':
     # check_data()
     # setup_config(hostname=host)
@@ -549,7 +656,7 @@ if __name__ == '__main__':
     # train_model()
     # predict_model()
     # hostnames = ["http://192.168.50.119:8090/api/"]
-    hostnames = ["http://192.168.50.119:8080/api/"]
+    hostnames = ["http://192.168.50.119:8081/api/"]
     # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
@@ -565,5 +672,6 @@ if __name__ == '__main__':
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames)
     delete_tasks_host(hostnames=hostnames)
-    import_absa_data_host_first(channel=['jd','tmall'],number=200, hostname=hostnames)
+    # import_absa_data_host_first(channel=['jd','tmall'],number=200, hostname=hostnames)
     # import_dev_data(hostname=hostnames[0])
+    import_excel_data(hostname=hostnames[0])
