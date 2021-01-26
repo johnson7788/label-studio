@@ -4,9 +4,8 @@
 # @File  : use_api.py
 # @Author: johnson
 # @Contact : github: johnson7788
-# @Desc  :  比较复杂的ABSA，根据关键字进行情感分类的api
-# 初始化项目的方法 :  label_studio/server.py start labeling_project --template text_classification --init --force --debug -b
-# 启动项目: label_studio/server.py start labeling_project --debug
+# @Desc  :  ner6，6类ner的导入数据到label_studio
+# 大部分函数尚未修改
 
 
 import requests
@@ -23,35 +22,7 @@ host = "http://localhost:8080/api/"
 localhost = "http://localhost:8080/api/"
 pp = pprint.PrettyPrinter(indent=4)
 
-
 def setup_config(hostname=None):
-    """
-    配置项目, 判断给定关键字的情感
-    :return:
-    """
-    data = {"label_config":
-                """
-                <View>
-                  <View style="flex: 30%; color:red">
-                    <Header value="$wordtype" />
-                    <Text name="keyword" value="$keyword"/>
-                  </View>
-                  <View style="flex: 30%">
-                      <Labels name="label" toName="text">
-                        <Label value="积极" background="red"></Label>
-                        <Label value="消极" background="darkorange"></Label>
-                        <Label value="中性" background="green"></Label>
-                      </Labels>
-                      <Text name="text" value="$text"></Text>
-                  </View>
-                </View>
-                """}
-    if hostname != None:
-        host = hostname
-    r = requests.post(host + "project/config", data=json.dumps(data), headers=headers)
-    print(r.status_code)
-    print(r.text)
-def setup_ner_config(hostname=None):
     """
     ner分类的config
     :return:
@@ -79,18 +50,14 @@ def setup_ner_config(hostname=None):
     print(r.text)
 
 
-def setup_config_host(hostnames, absa=True):
+def setup_config_host(hostnames):
     """
     删除所有task, 数据, 同时会删除已标注的数据
     :param hostnames: 要设置的hostname
-    :param absa: 要设置absa还是ner的配置
     :return:
     """
     for hostname in hostnames:
-        if absa:
-            setup_config(hostname=hostname)
-        else:
-            setup_ner_config(hostname=hostname)
+        setup_config(hostname=hostname)
 
 
 def get_project():
@@ -203,42 +170,20 @@ def delete_completions():
     print(r.text)
 
 
-def import_data():
+def import_data(hostname):
     """
     导入字典里面包含多个key和value的格式
     例如
     data = [{"text": "很好，实惠方便，会推荐朋友", "channel":"jd", "keyword":""},{"text": "一直买的他家这款洗发膏，用的挺好的，洗的干净也没有头皮屑"}]
     :return:
     """
-    data = [{'channel': 'jd', 'keyword': '芦荟', 'md5': '503d422e3c12b9bf33d5833a84aea219',
-             'text': '套装设计很贴心，效果是不错的。芦荟镇定效果可以，刺鼻味是有的。操作容易-效果不错。缺点是漂色不到半月，颜色又开始悄咪咪的恢复了，估计2-3周要做一次。仅个人经验。',
-             'wordtype': '成分'},
-            {'channel': 'jd', 'keyword': '海藻', 'md5': 'ec57fe5052e5304e4dccb05f438e3c0b',
-             'text': '孕期的时候就使用它家的海藻面膜，挺好用的',
-             'wordtype': '成分'},
-            {'channel': 'jd', 'keyword': '控油', 'md5': 'f3d1857051db73f637255f0db14686d0',
-             'text': '泡沫数量：666666产品香味：麝香控油效果：#',
-             'wordtype': '功效'},
-            {'channel': 'jd', 'keyword': '麝香', 'md5': 'b1d0dda097bdb011e7cb19887e51c89b',
-             'text': '泡沫数量：666666产品香味：麝香控油效果：#',
-             'wordtype': '成分'}, {'channel': 'jd', 'keyword': '保湿', 'md5': 'f40089e74b1cf93dac1fbb2d1589fb36',
-                                 'text': '这是第三购买了，碰上京东七夕活动也趁机买下，原来虽然还没有用完，因为活动就多囤点，面膜总是要用的反正，一直买的是这个牌子，用起来还是很放心的，没有酒精味，保湿效果很好，就是价钱小贵了些，如果平时再优惠点就更好了，不过这次没有送有点遗憾。',
-                                 'wordtype': '功效'},
-            {'channel': 'jd', 'keyword': '酒精', 'md5': '11187ff91e2cea54bebba96d3b265e92',
-             'text': '这是第三购买了，碰上京东七夕活动也趁机买下，原来虽然还没有用完，因为活动就多囤点，面膜总是要用的反正，一直买的是这个牌子，用起来还是很放心的，没有酒精味，保湿效果很好，就是价钱小贵了些，如果平时再优惠点就更好了，不过这次没有送有点遗憾。',
-             'wordtype': '成分'}, {'channel': 'jd', 'keyword': '没有酒精', 'md5': '83d8fa49556003e9e2662f8f410c7865',
-                                 'text': '这是第三购买了，碰上京东七夕活动也趁机买下，原来虽然还没有用完，因为活动就多囤点，面膜总是要用的反正，一直买的是这个牌子，用起来还是很放心的，没有酒精味，保湿效果很好，就是价钱小贵了些，如果平时再优惠点就更好了，不过这次没有送有点遗憾。',
-                                 'wordtype': '成分'},
-            {'channel': 'jd', 'keyword': '质感', 'md5': 'd1549cc845f00afcb2e200377d296444',
-             'text': '产品质感：打开一股特殊的味道，有点像酒精味，也有点像发酵的味道适合肤质：适合肤质：适合 敏感肌使用补水效果：补水效果不错。贴合效果：面膜大小正好，贴合面部非常好使用感受：总体来说还可以。本人敏感皮肤，用着不错',
-             'wordtype': '功效'}, {'channel': 'jd', 'keyword': '补水', 'md5': 'e09d37df17e5d972d46f57c11950e4e4',
-                                 'text': '产品质感：打开一股特殊的味道，有点像酒精味，也有点像发酵的味道适合肤质：适合肤质：适合 敏感肌使用补水效果：补水效果不错。贴合效果：面膜大小正好，贴合面部非常好使用感受：总体来说还可以。本人敏感皮肤，用着不错',
-                                 'wordtype': '功效'},
-            {'channel': 'jd', 'keyword': '酒精', 'md5': 'cec263f850791af51fc447f701a076e5',
-             'text': '产品质感：打开一股特殊的味道，有点像酒精味，也有点像发酵的味道适合肤质：适合肤质：适合 敏感肌使用补水效果：补水效果不错。贴合效果：面膜大小正好，贴合面部非常好使用感受：总体来说还可以。本人敏感皮肤，用着不错',
-             'wordtype': '成分'}]
-
-    r = requests.post(host + "project/import", data=json.dumps(data), headers=headers)
+    data = [{'channel': 'jd', 'md5': '503d422e3c12b9bf33d5833a84aea219',
+             'text': '套装设计很贴心，效果是不错的。芦荟镇定效果可以，刺鼻味是有的。操作容易-效果不错。缺点是漂色不到半月，颜色又开始悄咪咪的恢复了，估计2-3周要做一次。仅个人经验。'},
+            {'channel': 'jd','md5': 'ec57fe5052e5304e4dccb05f438e3c0b',
+             'text': '孕期的时候就使用它家的海藻面膜，挺好用的'},
+            {'channel': 'jd','md5': 'f3d1857051db73f637255f0db14686d0',
+             'text': '泡沫数量：666666产品香味：麝香控油效果：#'}]
+    r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
 
 
@@ -323,43 +268,6 @@ def get_imported_data_md5(imported_data):
             md5_value = cal_md5(content=content)
         md5_list.append(md5_value)
     return md5_list
-
-
-def import_absa_data(channel=['jd', 'tmall'], number=10):
-    """
-    导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
-    12月份，功效4000条，其它维度各1500条
-    :param number:
-    :return:
-    """
-    leibie = ['成分', '功效', '香味', '包装', '肤感']
-    from read_hive import get_absa_corpus
-    # 要导入的数据
-    valid_data = []
-    # 已经导入的数据, 注意更改获取的样本数目，默认是5000条
-    imported_data = get_tasks(page_size=5000)
-    imported_data_md5 = get_imported_data_md5(imported_data)
-    # 开始从hive数据库拉数据
-    data = get_absa_corpus(channel=['jd', 'tmall'], requiretags=None, number=10)
-    # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
-    for one_data in data:
-        content = one_data['keyword'] + one_data['text']
-        data_md5 = cal_md5(content)
-        if data_md5 in imported_data_md5:
-            # 数据已经导入到label-studio过了，不需要重新导入
-            continue
-        else:
-            # 没有导入过label-studio，那么加入到valid_data，进行导入
-            # 设置md5字段，方便以后获取
-            one_data['md5'] = data_md5
-            valid_data.append(one_data)
-    print(f"可导入的有效数据是{len(valid_data)}, 有重复数据{len(data) - len(valid_data)} 是无需导入的")
-    if not valid_data:
-        # 如果都是已经导入过的数据，直接放弃导入
-        return
-    r = requests.post(host + "project/import", data=json.dumps(valid_data), headers=headers)
-    pp.pprint(r.json())
-    print(f"共导入数据{len(valid_data)}条")
 
 
 def import_absa_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
@@ -677,6 +585,9 @@ def import_excel_data(hostname):
     pp.pprint(r.json())
 
 
+def import_pkl_data(hostname):
+    pass
+
 if __name__ == '__main__':
     # check_data()
     # setup_config(hostname=host)
@@ -684,15 +595,13 @@ if __name__ == '__main__':
     # import_data()
     # get_tasks()
     # get_tasks(taskid=0)
-    # delete_tasks(hostname="http://192.168.50.119:8090/api/")
     # get_completions()
     # delete_completions()
     # health()
     # list_models()
     # train_model()
     # predict_model()
-    # hostnames = ["http://192.168.50.119:8090/api/"]
-    hostnames = ["http://192.168.50.139:8081/api/"]
+    hostnames = ["http://192.168.50.139:8083/api/"]
     # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
@@ -707,7 +616,8 @@ if __name__ == '__main__':
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames)
-    delete_tasks_host(hostnames=hostnames)
-    import_absa_data_host_first(channel=['jd','tmall'],number=1000, hostname=hostnames)
+    # delete_tasks_host(hostnames=hostnames)
+    # import_absa_data_host_first(channel=['jd','tmall'],number=1000, hostname=hostnames)
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
+    import_data(hostname=hostnames[0])
