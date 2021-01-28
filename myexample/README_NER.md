@@ -1,3 +1,5 @@
+# 判断是否是成分词，还是干扰词
+
 # 使用示例
 所有 label_studio/server.py 都等价于 label-studio命令
 

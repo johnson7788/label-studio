@@ -4,10 +4,20 @@
 # @File  : use_api.py
 # @Author: johnson
 # @Contact : github: johnson7788
-# @Desc  :  比较复杂的ABSA，根据关键字进行情感分类的api
-# 初始化项目的方法 :  label_studio/server.py start labeling_project --template text_classification --init --force --debug -b
-# 启动项目: label_studio/server.py start labeling_project --debug
-
+# @Desc  :  成分词判断，是否是成分词，还是成词的干扰词
+"""
+channel	content	关键词	判断是否准确	理由
+tmall	有薄荷，抹上凉凉的，没有什么不适	薄荷	准确	说的是成分
+tmall	整体评价：很大一瓶 水的质地比较浓稠 有股那种洗护的味道 刺鼻 不好闻 上脸比较滋润 鼻翼附近会刺痛 一分钱一分货吧 感受不好 不会回购 我一直在用红石榴和微精华水这两款水肤感都很好 推荐购买	红石榴	不准确	红石榴指的是产品
+tmall	发货特别的快，我第1天买的，第2天就到了，迫不及待的打开试用了一下，吸收效果不错的，提亮肤色效果特别好，我的肤质比较偏干，正好适合秋冬季用，只是味道有一点点不太喜欢，自己加了两滴玫瑰精油一起，还挺好的。本来以为送了一盒膜，打开发现是个祝福的相框吧，还挺尴尬的。哈哈???	玫瑰	不准确	说的是精油，并非成分
+tmall	不错，湿敷比擦拭更舒服，冰冰凉凉的有点提神，好闻的薄荷感	薄荷	不准确	说的是使用感受，并非成分
+tmall	买来收敛毛孔的，看着是天猫超市，价格也便宜，标签包装都挺完整的，我都一层一层撕下来了，闻着是橙子和牙膏薄荷的味道。这个的产品有好多假冒的，希望是真的吧！	薄荷	不准确	说的是味道和使用感受，并非成分
+tmall	湿敷的，有薄荷跟橘子的味道，才用，期待以后的效果吧	薄荷	不准确	说的是味道，并非成分
+tmall	这个水可以用来湿敷 虽然用来湿敷有些贵 ！里面含有薄荷，涂上非常舒服，洗面奶面霜也炒鸡适合我 我油皮痘痘肌	薄荷	准确	说的是成分
+redbook	今天分享一下我在夏天非常喜欢用的三款水：1??悦木之源菌菇水真的太太太喜欢啦，非常的清爽，不油腻，上脸吸收速度很快，湿敷对痘痘消肿有不错的效果。常年囤货。2??skii神仙水控油效果非常明显，对油皮和混油皮友好，干皮渗入。除了贵和味道之外，没有别的缺点，有预算的宝宝买就对了。3??城野医生收敛水可以调理你的皮脂分泌，但是没有收缩毛孔和去黑头的功效，使用感很好，清清凉凉的，但其实不添加酒精，而是添加了薄荷醇，肤感和气味都和酒精有点类似，但是很温和，不会造成屏障受损。@生活薯  @薯队长	薄荷	准确	说的是成分
+tmall	用在白泥之后还是很不错的，觉得有二次湿敷出白头，收缩毛孔大概是有的吧	白泥	不准确	说的是产品，并非成分
+weibo	#空瓶记# #空瓶记城野医生的毛孔收敛水 每周毛孔清洁后必备的水儿 配合奥尔滨的化妆棉进行二次清洁 平价好用 推了一万年了 我去日本就背了七八瓶回来颐莲的玻尿酸护发原液 因为我头发经常烫染所以发梢有点受损 每次洗完头发按三泵涂抹 不粘腻及时补水然后再涂抹护发精油锁住水份 颐莲这个牌子是福瑞达旗下的 福瑞达和华西生物都是国内做玻尿酸的大牛 雅诗兰黛的玻尿酸供应商 所以不要瞧不起他们 有这么便宜好用性价比高的国货不支持 还等啥呢 收起全文d	玻尿酸	不准确	说的是产品，并非成分
+"""
 
 import requests
 import json
@@ -23,35 +33,7 @@ host = "http://localhost:8080/api/"
 localhost = "http://localhost:8080/api/"
 pp = pprint.PrettyPrinter(indent=4)
 
-
 def setup_config(hostname=None):
-    """
-    配置项目, 判断给定关键字的情感
-    :return:
-    """
-    data = {"label_config":
-                """
-                <View>
-                  <View style="flex: 30%; color:red">
-                    <Header value="$wordtype" />
-                    <Text name="keyword" value="$keyword"/>
-                  </View>
-                  <View style="flex: 30%">
-                      <Labels name="label" toName="text">
-                        <Label value="积极" background="red"></Label>
-                        <Label value="消极" background="darkorange"></Label>
-                        <Label value="中性" background="green"></Label>
-                      </Labels>
-                      <Text name="text" value="$text"></Text>
-                  </View>
-                </View>
-                """}
-    if hostname != None:
-        host = hostname
-    r = requests.post(host + "project/config", data=json.dumps(data), headers=headers)
-    print(r.status_code)
-    print(r.text)
-def setup_ner_config(hostname=None):
     """
     ner分类的config
     :return:
@@ -59,14 +41,14 @@ def setup_ner_config(hostname=None):
     data = {"label_config":
                 """
 <View>
+  <View style="flex: 30%; color:red">
+    <Header value="$wordtype" />
+    <Text name="keyword" value="$keyword"/>
+  </View>
   <View style="flex: 30%">
       <Labels name="label" toName="text">
-        <Label value="成分" background="red"></Label>
-        <Label value="功效" background="darkorange"></Label>
-        <Label value="香味" background="green"></Label>
-        <Label value="包装" background="blue"></Label>
-        <Label value="肤感" background="purple"></Label>
-        <Label value="其它" background="black"></Label>
+        <Label value="是" background="red"></Label>
+        <Label value="否" background="darkorange"></Label>
       </Labels>
       <Text name="text" value="$text"></Text>
   </View>
@@ -79,18 +61,14 @@ def setup_ner_config(hostname=None):
     print(r.text)
 
 
-def setup_config_host(hostnames, absa=True):
+def setup_config_host(hostnames):
     """
     删除所有task, 数据, 同时会删除已标注的数据
     :param hostnames: 要设置的hostname
-    :param absa: 要设置absa还是ner的配置
     :return:
     """
     for hostname in hostnames:
-        if absa:
-            setup_config(hostname=hostname)
-        else:
-            setup_ner_config(hostname=hostname)
+        setup_config(hostname=hostname)
 
 
 def get_project():
@@ -203,11 +181,23 @@ def delete_completions():
     print(r.text)
 
 
-def import_data():
+def import_data(hostname):
     """
     导入字典里面包含多个key和value的格式
     例如
     data = [{"text": "很好，实惠方便，会推荐朋友", "channel":"jd", "keyword":""},{"text": "一直买的他家这款洗发膏，用的挺好的，洗的干净也没有头皮屑"}]
+    channel	content	关键词	判断是否准确	理由
+tmall	有薄荷，抹上凉凉的，没有什么不适	薄荷	准确	说的是成分
+tmall	整体评价：很大一瓶 水的质地比较浓稠 有股那种洗护的味道 刺鼻 不好闻 上脸比较滋润 鼻翼附近会刺痛 一分钱一分货吧 感受不好 不会回购 我一直在用红石榴和微精华水这两款水肤感都很好 推荐购买	红石榴	不准确	红石榴指的是产品
+tmall	发货特别的快，我第1天买的，第2天就到了，迫不及待的打开试用了一下，吸收效果不错的，提亮肤色效果特别好，我的肤质比较偏干，正好适合秋冬季用，只是味道有一点点不太喜欢，自己加了两滴玫瑰精油一起，还挺好的。本来以为送了一盒膜，打开发现是个祝福的相框吧，还挺尴尬的。哈哈???	玫瑰	不准确	说的是精油，并非成分
+tmall	不错，湿敷比擦拭更舒服，冰冰凉凉的有点提神，好闻的薄荷感	薄荷	不准确	说的是使用感受，并非成分
+tmall	买来收敛毛孔的，看着是天猫超市，价格也便宜，标签包装都挺完整的，我都一层一层撕下来了，闻着是橙子和牙膏薄荷的味道。这个的产品有好多假冒的，希望是真的吧！	薄荷	不准确	说的是味道和使用感受，并非成分
+tmall	湿敷的，有薄荷跟橘子的味道，才用，期待以后的效果吧	薄荷	不准确	说的是味道，并非成分
+tmall	这个水可以用来湿敷 虽然用来湿敷有些贵 ！里面含有薄荷，涂上非常舒服，洗面奶面霜也炒鸡适合我 我油皮痘痘肌	薄荷	准确	说的是成分
+redbook	今天分享一下我在夏天非常喜欢用的三款水：1??悦木之源菌菇水真的太太太喜欢啦，非常的清爽，不油腻，上脸吸收速度很快，湿敷对痘痘消肿有不错的效果。常年囤货。2??skii神仙水控油效果非常明显，对油皮和混油皮友好，干皮渗入。除了贵和味道之外，没有别的缺点，有预算的宝宝买就对了。3??城野医生收敛水可以调理你的皮脂分泌，但是没有收缩毛孔和去黑头的功效，使用感很好，清清凉凉的，但其实不添加酒精，而是添加了薄荷醇，肤感和气味都和酒精有点类似，但是很温和，不会造成屏障受损。@生活薯  @薯队长	薄荷	准确	说的是成分
+tmall	用在白泥之后还是很不错的，觉得有二次湿敷出白头，收缩毛孔大概是有的吧	白泥	不准确	说的是产品，并非成分
+weibo	#空瓶记# #空瓶记城野医生的毛孔收敛水 每周毛孔清洁后必备的水儿 配合奥尔滨的化妆棉进行二次清洁 平价好用 推了一万年了 我去日本就背了七八瓶回来颐莲的玻尿酸护发原液 因为我头发经常烫染所以发梢有点受损 每次洗完头发按三泵涂抹 不粘腻及时补水然后再涂抹护发精油锁住水份 颐莲这个牌子是福瑞达旗下的 福瑞达和华西生物都是国内做玻尿酸的大牛 雅诗兰黛的玻尿酸供应商 所以不要瞧不起他们 有这么便宜好用性价比高的国货不支持 还等啥呢 收起全文d	玻尿酸	不准确	说的是产品，并非成分
+
     :return:
     """
     data = [{'channel': 'jd', 'keyword': '芦荟', 'md5': '503d422e3c12b9bf33d5833a84aea219',
@@ -237,8 +227,7 @@ def import_data():
             {'channel': 'jd', 'keyword': '酒精', 'md5': 'cec263f850791af51fc447f701a076e5',
              'text': '产品质感：打开一股特殊的味道，有点像酒精味，也有点像发酵的味道适合肤质：适合肤质：适合 敏感肌使用补水效果：补水效果不错。贴合效果：面膜大小正好，贴合面部非常好使用感受：总体来说还可以。本人敏感皮肤，用着不错',
              'wordtype': '成分'}]
-
-    r = requests.post(host + "project/import", data=json.dumps(data), headers=headers)
+    r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
 
 
@@ -325,43 +314,6 @@ def get_imported_data_md5(imported_data):
     return md5_list
 
 
-def import_absa_data(channel=['jd', 'tmall'], number=10):
-    """
-    导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
-    12月份，功效4000条，其它维度各1500条
-    :param number:
-    :return:
-    """
-    leibie = ['成分', '功效', '香味', '包装', '肤感']
-    from read_hive import get_absa_corpus
-    # 要导入的数据
-    valid_data = []
-    # 已经导入的数据, 注意更改获取的样本数目，默认是5000条
-    imported_data = get_tasks(page_size=5000)
-    imported_data_md5 = get_imported_data_md5(imported_data)
-    # 开始从hive数据库拉数据
-    data = get_absa_corpus(channel=['jd', 'tmall'], requiretags=None, number=10)
-    # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
-    for one_data in data:
-        content = one_data['keyword'] + one_data['text']
-        data_md5 = cal_md5(content)
-        if data_md5 in imported_data_md5:
-            # 数据已经导入到label-studio过了，不需要重新导入
-            continue
-        else:
-            # 没有导入过label-studio，那么加入到valid_data，进行导入
-            # 设置md5字段，方便以后获取
-            one_data['md5'] = data_md5
-            valid_data.append(one_data)
-    print(f"可导入的有效数据是{len(valid_data)}, 有重复数据{len(data) - len(valid_data)} 是无需导入的")
-    if not valid_data:
-        # 如果都是已经导入过的数据，直接放弃导入
-        return
-    r = requests.post(host + "project/import", data=json.dumps(valid_data), headers=headers)
-    pp.pprint(r.json())
-    print(f"共导入数据{len(valid_data)}条")
-
-
 def import_absa_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
     """
     按比例导入不同的host, 导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
@@ -409,19 +361,18 @@ def import_absa_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
         print(f"共导入主机host{h}中数据{len(vdata)}条")
 
 
-def import_absa_data_host_first(channel=['jd', 'tmall'], require_tags=["component","effect","fragrance","pack","skin"], number=10, hostname=None, mirror=False):
+def import_absa_data_host_first(channel=['jd', 'tmall'], require_tags=["component","effect","fragrance","pack","skin"], number=10, hostname=None, ptime_keyword=">:2020-12-19", not_cache=True, table="da_wide_table_new"):
     """
     按比例导入不同的host, 导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     12月份，功效4000条，其它维度各1500条
     :param number:
     :param require_tags: 需要哪些维度的语料
     :param hostname:平均导入每个host中,列表或None
-    :param mirror: 给所有host导入一样的数据
     :return:
     """
     leibie = ['成分', '功效', '香味', '包装', '肤感']
-    leibie_num = [100, 100, 100, 100, 100]
-    # leibie_num = [-1, -1, -1, -1, 200]
+    # leibie_num = [100, 100, 100, 100, 100]
+    leibie_num = [1000, -1, -1, -1, -1]
     # leibie_num = [2,4,2,2,2]
     from read_hive import get_absa_corpus
     # 要导入的数据
@@ -436,7 +387,7 @@ def import_absa_data_host_first(channel=['jd', 'tmall'], require_tags=["componen
         imported_data.extend(host_imported_data)
     imported_data_md5 = get_imported_data_md5(imported_data)
     # 开始从hive数据库拉数据, 如果unique_type设置为2，那么数据可能过少
-    data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=1)
+    data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=1, ptime_keyword=ptime_keyword, not_cache=not_cache, table=table)
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
     initial_count = [0, 0, 0, 0, 0]
     for one_data in data:
@@ -455,26 +406,20 @@ def import_absa_data_host_first(channel=['jd', 'tmall'], require_tags=["componen
             # 设置md5字段，方便以后获取
             one_data['md5'] = data_md5
             valid_data.append(one_data)
+
     print(f"可导入的有效数据是{len(valid_data)}, 有重复数据或不需要数据{len(data) - len(valid_data)} 是无需导入的")
     if not valid_data:
         # 如果都是已经导入过的数据，直接放弃导入
         return
     if len(valid_data) < number:
         print(f"收集的数据量过少，很可能是因为get_absa_corpus的unique type设置问题")
-
-    if mirror:
-        for h in host:
-            r = requests.post(h + "project/import", data=json.dumps(valid_data), headers=headers)
-            pp.pprint(r.json())
-            print(f"共导入主机host{h}中数据{len(valid_data)}条")
-    else:
-        every_host_number = int(len(valid_data) / len(host))
-        print(f"每个主机导入数据{every_host_number}")
-        vdatas = [valid_data[i:i + every_host_number] for i in range(0, len(valid_data), every_host_number)]
-        for h, vdata in zip(host, vdatas):
-            r = requests.post(h + "project/import", data=json.dumps(vdata), headers=headers)
-            pp.pprint(r.json())
-            print(f"共导入主机host{h}中数据{len(vdata)}条")
+    every_host_number = int(len(valid_data) / len(host))
+    print(f"每个主机导入数据{every_host_number}")
+    vdatas = [valid_data[i:i + every_host_number] for i in range(0, len(valid_data), every_host_number)]
+    for h, vdata in zip(host, vdatas):
+        r = requests.post(h + "project/import", data=json.dumps(vdata), headers=headers)
+        pp.pprint(r.json())
+        print(f"共导入主机host{h}中数据{len(vdata)}条")
 
 
 def check_data():
@@ -685,6 +630,9 @@ def import_excel_data(hostname):
     pp.pprint(r.json())
 
 
+def import_pkl_data(hostname):
+    pass
+
 if __name__ == '__main__':
     # check_data()
     # setup_config(hostname=host)
@@ -692,15 +640,13 @@ if __name__ == '__main__':
     # import_data()
     # get_tasks()
     # get_tasks(taskid=0)
-    # delete_tasks(hostname="http://192.168.50.119:8090/api/")
     # get_completions()
     # delete_completions()
     # health()
     # list_models()
     # train_model()
     # predict_model()
-    # hostnames = ["http://192.168.50.119:8090/api/"]
-    # hostnames = ["http://192.168.50.139:8080/api/", "http://192.168.50.139:8081/api/"]
+    hostnames = ["http://192.168.50.139:8084/api/"]
     # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
@@ -714,8 +660,9 @@ if __name__ == '__main__':
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
-    # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/absa/")
+    # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/components/")
     delete_tasks_host(hostnames=hostnames)
-    import_absa_data_host_first(channel=['weibo'],number=800, hostname=hostnames, mirror=True)
+    import_absa_data_host_first(channel=None,require_tags=['component'], number=1000, hostname=hostnames, not_cache=True, table="da_wide_table_new")
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
+    # import_data(hostname=hostnames[0])

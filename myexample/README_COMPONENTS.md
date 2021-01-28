@@ -1,5 +1,3 @@
-# aspect的情感分析
-
 # 使用示例
 所有 label_studio/server.py 都等价于 label-studio命令
 
@@ -26,7 +24,7 @@ label-studio-ml start my_ml_backend
 ```
 或方法2：
 ```buildoutcfg
-python my_ml_backend/_wsgi.py --log-level DEBUG --debug
+python my_ml_backend/_wsgi.py --log-level DEBUG --debug --port 5051 --model-name components
 ```
 
 ## 启动一个label-studio关联ml后端

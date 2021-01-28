@@ -6,8 +6,7 @@ import requests
 import json
 from label_studio.ml import LabelStudioMLBase
 
-
-class ABSATextClassifier(LabelStudioMLBase):
+class ComponentsTextClassifier(LabelStudioMLBase):
 
     def __init__(self, **kwargs):
         """
@@ -16,11 +15,11 @@ class ABSATextClassifier(LabelStudioMLBase):
         {'label_config': '<View>  <View style="flex: 30%; color:red">    <Header value="关键字" />    <Text name="keyword" value="$keyword"/>  </View>  <View style="flex: 30%">    <Header value="句子" />    <Text name="text" value="$text"/>    <Choices name="sentiment" toName="text" choice="single">      <Choice value="积极"/>      <Choice value="消极"/>      <Choice value="中性"/>    </Choices>  </View></View>', 'train_output': {'labels': ['中性', '积极'], 'model_file': '/Users/admin/git/label-studio/my_ml_backend/text_classification_project1a43/1608710349/model.pkl'}}
         """
         # don't forget to initialize base class...
-        super(ABSATextClassifier, self).__init__(**kwargs)
+        super(ComponentsTextClassifier, self).__init__(**kwargs)
 
-        self.train_url = "http://192.168.50.139:5000/api/train_truncate"
+        self.train_url = "http://192.168.50.139:5010/api/train_truncate"
         # self.train_url = "http://127.0.0.1:5000/api/train_truncate"
-        self.predict_url = "http://192.168.50.139:5000/api/predict_truncate"
+        self.predict_url = "http://192.168.50.139:5010/api/predict_truncate"
         # self.predict_url = "http://127.0.0.1:5000/api/predict_truncate"
 
         # 然后从配置中收集所有key，这些key将用于从任务中提取数据并形成预测
@@ -155,7 +154,7 @@ class ABSATextClassifier(LabelStudioMLBase):
         r = requests.post(self.train_url, headers=headers, data=json.dumps(data), timeout=600)
         print(f"训练结果{r.json()}")
 
-        # eg: {'labels': ['积极', '消极', '中性'], 'model_file': 'my_ml_backend/text_classification_project1a43/1608621143/model.pkl'}
+        # eg: {'labels': ['是', '否',], 'model_file': 'my_ml_backend/text_classification_project1a43/1608621143/model.pkl'}
         train_output = {
             'labels': self.labels,
             'model_file': "model_file"

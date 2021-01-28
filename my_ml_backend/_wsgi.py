@@ -30,6 +30,7 @@ logging.config.dictConfig({
 
 from label_studio.ml import init_app
 from absa_classifier import ABSATextClassifier
+from components_classifier import ComponentsTextClassifier
 
 
 _DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.json')
@@ -67,6 +68,9 @@ if __name__ == "__main__":
     parser.add_argument(
         '--check', dest='check', action='store_true',
         help='验证模型，在启动之前')
+    parser.add_argument(
+        '--model-name', dest='model_name', type=str, default="absa",
+        help='启动哪个模型')
 
     args = parser.parse_args()
 
@@ -100,13 +104,16 @@ if __name__ == "__main__":
 
     if args.kwargs:
         kwargs.update(parse_kwargs())
-
+    if args.model_name == "absa":
+        MODEL_NAME = ABSATextClassifier
+    else:
+        MODEL_NAME = ComponentsTextClassifier
     if args.check:
-        print('Check "' + ABSATextClassifier.__name__ + '" instance creation..')
-        model = ABSATextClassifier(**kwargs)
+        print('Check "' + MODEL_NAME.__name__ + '" instance creation..')
+        model = MODEL_NAME(**kwargs)
 
     app = init_app(
-        model_class=ABSATextClassifier,
+        model_class=MODEL_NAME,
         model_dir=os.environ.get('MODEL_DIR', args.model_dir),
         redis_queue=os.environ.get('RQ_QUEUE_NAME', 'default'),
         redis_host=os.environ.get('REDIS_HOST', 'localhost'),
@@ -118,6 +125,7 @@ if __name__ == "__main__":
 
 else:
     # for uWSGI use
+    print("注意：使用的默认的ABSA的模型")
     app = init_app(
         model_class=ABSATextClassifier,
         model_dir=os.environ.get('MODEL_DIR', os.path.dirname(__file__)),
