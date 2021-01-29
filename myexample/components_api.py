@@ -42,13 +42,13 @@ def setup_config(hostname=None):
                 """
 <View>
   <View style="flex: 30%; color:red">
-    <Header value="$wordtype" />
+    <Header value="$channel" />
     <Text name="keyword" value="$keyword"/>
   </View>
   <View style="flex: 30%">
       <Labels name="label" toName="text">
         <Label value="是" background="red"></Label>
-        <Label value="否" background="darkorange"></Label>
+        <Label value="否" background="blue"></Label>
       </Labels>
       <Text name="text" value="$text"></Text>
   </View>
@@ -361,9 +361,9 @@ def import_absa_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
         print(f"共导入主机host{h}中数据{len(vdata)}条")
 
 
-def import_absa_data_host_first(channel=['jd', 'tmall'], require_tags=["component","effect","fragrance","pack","skin"], number=10, hostname=None, ptime_keyword=">:2020-12-19", not_cache=True, table="da_wide_table_new"):
+def import_absa_data_host_first(channel=['jd', 'tmall'], require_tags=["component","effect","fragrance","pack","skin"], number=10, unique_type=1, hostname=None, ptime_keyword="<:2020-12-10", not_cache=True, table="da_wide_table_new"):
     """
-    按比例导入不同的host, 导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
+    按比例导入不同的host, 导入成分分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     12月份，功效4000条，其它维度各1500条
     :param number:
     :param require_tags: 需要哪些维度的语料
@@ -387,7 +387,7 @@ def import_absa_data_host_first(channel=['jd', 'tmall'], require_tags=["componen
         imported_data.extend(host_imported_data)
     imported_data_md5 = get_imported_data_md5(imported_data)
     # 开始从hive数据库拉数据, 如果unique_type设置为2，那么数据可能过少
-    data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=1, ptime_keyword=ptime_keyword, not_cache=not_cache, table=table)
+    data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=unique_type, ptime_keyword=ptime_keyword, not_cache=not_cache, table=table)
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
     initial_count = [0, 0, 0, 0, 0]
     for one_data in data:
@@ -646,7 +646,7 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    hostnames = ["http://192.168.50.139:8084/api/"]
+    hostnames = ["http://192.168.50.139:8086/api/"]
     # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
@@ -655,14 +655,14 @@ if __name__ == '__main__':
     #              "http://192.168.50.119:8083/api/", "http://192.168.50.119:8084/api/","http://192.168.50.119:8085/api/",
     #              "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
     #              "http://192.168.50.119:8089/api/"]
-    # setup_config_host(hostnames=hostnames)
+    setup_config_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/components/")
     delete_tasks_host(hostnames=hostnames)
-    import_absa_data_host_first(channel=None,require_tags=['component'], number=1000, hostname=hostnames, not_cache=True, table="da_wide_table_new")
+    import_absa_data_host_first(channel=None,require_tags=['component'], number=2000, unique_type=1, hostname=hostnames, not_cache=True, table="da_wide_table_new")
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
     # import_data(hostname=hostnames[0])
