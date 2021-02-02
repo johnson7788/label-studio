@@ -436,7 +436,7 @@ def import_absa_data_host_first(channel=['jd', 'tmall'], require_tags=["componen
         imported_data.extend(host_imported_data)
     imported_data_md5 = get_imported_data_md5(imported_data)
     # 开始从hive数据库拉数据, 如果unique_type设置为2，那么数据可能过少
-    data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=1)
+    data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=2)
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
     initial_count = [0, 0, 0, 0, 0]
     for one_data in data:
@@ -699,7 +699,7 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    # hostnames = ["http://192.168.50.119:8090/api/"]
+    hostnames = ["http://192.168.50.139:8087/api/"]
     # hostnames = ["http://192.168.50.139:8080/api/", "http://192.168.50.139:8081/api/"]
     # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
@@ -709,13 +709,13 @@ if __name__ == '__main__':
     #              "http://192.168.50.119:8083/api/", "http://192.168.50.119:8084/api/","http://192.168.50.119:8085/api/",
     #              "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
     #              "http://192.168.50.119:8089/api/"]
-    # setup_config_host(hostnames=hostnames)
+    setup_config_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/absa/")
     delete_tasks_host(hostnames=hostnames)
-    import_absa_data_host_first(channel=['weibo'],number=800, hostname=hostnames, mirror=True)
+    import_absa_data_host_first(channel=None,require_tags=["effect","skin"],number=800, hostname=hostnames, mirror=True)
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
