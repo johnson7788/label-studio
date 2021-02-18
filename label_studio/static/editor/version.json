@@ -1,6 +1,6 @@
 {
-  "message": "iAllow to delete non-perRegion TextArea items",
-  "commit": "8f89391a106a99498158c2bd727a306b29327fda",
-  "branch": "release/0.8.2",
-  "date": "2020-12-01T16:07:37Z"
+  "message": "Merge pull request #169 from heartexlabs/feature/audio-transcription\n\nBetter audio transcription",
+  "commit": "7350e8c800c4d531d0a2b52a03217c7e6998789b",
+  "branch": "master",
+  "date": "2021-02-17T12:49:10Z"
 }

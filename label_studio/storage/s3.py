@@ -1,7 +1,7 @@
 import logging
 import boto3
 from botocore.client import Config
-import json
+import ujson as json
 import os
 
 from .base import CloudStorage, CloudStorageForm, BaseStorageForm, BooleanField, Optional, StringField
@@ -10,10 +10,10 @@ logger = logging.getLogger(__name__)
 logging.getLogger('botocore').setLevel(logging.CRITICAL)
 boto3.set_stream_logger(level=logging.INFO)
 S3_REGION = os.environ.get('S3_REGION', 'us-east-1')
-
+S3_ENDPOINT = os.environ.get('S3_ENDPOINT')
 
 def get_client_and_resource(
-    aws_access_key_id=None, aws_secret_access_key=None, aws_session_token=None, region=None
+    aws_access_key_id=None, aws_secret_access_key=None, aws_session_token=None, region=None, **kwargs
 ):
     session = boto3.Session(
         aws_access_key_id=aws_access_key_id,
@@ -23,8 +23,10 @@ def get_client_and_resource(
     region = region or S3_REGION
     if region:
         settings['region_name'] = region
+    if S3_ENDPOINT:
+        settings['endpoint_url'] = S3_ENDPOINT
     client = session.client('s3', config=boto3.session.Config(signature_version='s3v4'), **settings)
-    resource = session.resource('s3')
+    resource = session.resource('s3', config=boto3.session.Config(signature_version='s3v4'), **settings)
     return client, resource
 
 
@@ -79,11 +81,12 @@ class S3Storage(CloudStorage):
     def readable_path(self):
         return self.url_prefix + self.path + '/' + self.prefix
 
-    def _get_value(self, key):
+    def _get_value(self, key, inplace=False, validate=True):
         s3 = self.client['s3']
         bucket = self.client['bucket']
         obj = s3.Object(bucket.name, key).get()['Body'].read().decode('utf-8')
         value = json.loads(obj)
+        assert isinstance(value, dict), "For cloud storage it's allowed to use dict (one task) per json file only"
         return value
 
     def _set_value(self, key, value):

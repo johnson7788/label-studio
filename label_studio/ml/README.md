@@ -42,7 +42,7 @@ my_ml_backend/text_classification_project1a43/
    
 2. Create new ML backend,  你也可以修改simple_text_classifier.py，生成自己的脚本
    ```bash
-   label-studio-ml init my_ml_backend --script label-studio/ml/examples/simple_text_classifier.py
+   label-studio-ml init my_ml_backend --script label_studio/ml/examples/simple_text_classifier.py
    ```
    
 3. 启动ML后端服务器

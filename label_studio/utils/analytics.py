@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import io
 import requests
 import calendar
@@ -8,13 +9,10 @@ import json
 import werkzeug
 
 from datetime import datetime
-from mixpanel import Mixpanel, MixpanelException
-from copy import deepcopy
-from operator import itemgetter
-from collections import defaultdict
+from mixpanel import Mixpanel
 
 from uuid import uuid4
-from .misc import get_app_version, parse_config, convert_string_to_hash
+from .misc import get_app_version
 from .io import get_config_dir
 
 logger = logging.getLogger(__name__)
@@ -105,6 +103,8 @@ class Analytics(object):
             return True
         if request.args.get('polling', False):
             return True
+        if request.args.get('interaction', None) == 'timer':
+            return True
 
     def send(self, request=None, session=None, response=None, **kwargs):
         if not self.collect_analytics:
@@ -135,7 +135,8 @@ class Analytics(object):
                 'content_length': request.content_length,
                 'env': self.env,
                 'version': self.version,
-                'project_name': self.input_args.project_name if self.input_args else None
+                'project_name': self.input_args.project_name if self.input_args else None,
+                'python': sys.version_info[0] + '.' + sys.version_info[1]
             }
         except:
             pass

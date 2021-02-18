@@ -29,15 +29,7 @@
     }
   </script>
 
-  <!-- Editor CSS -->
-  {% for css in editor_css %}
-    <link href="{{ css }}" rel="stylesheet">
-  {% endfor %}
-
-  <!-- Editor JS -->
-  {% for js in editor_js %}
-    <script src="{{ js }}"></script>
-  {% endfor %}
+  {% block head %}{% endblock %}
 
 </head>
 
@@ -55,34 +47,14 @@
   </a>
   <ul id="nav">
   &nbsp;
-    <a href="." class="{% if url_for(request.endpoint) == '/' %}active{% endif %}">标签</a>
-
-
-    <a href="tasks" class="{% if url_for(request.endpoint) == '/tasks' %}active{% endif %}">任务</a>
-
-    <a id="menu-import" href="import" class="{% if url_for(request.endpoint) == '/import' %}active{% endif %}"
-       style="display:{{'block' if project and project.can_manage_tasks else 'none'}}">导入</a>
-
-    <a href="export" class="{% if url_for(request.endpoint) == '/export' %}active{% endif %}">导出</a>
+    <a href="tasks" class="{% if url_for(request.endpoint) == '/tasks' %}active{% endif %}">标签</a>
 
 
     <a href="model" class="{% if url_for(request.endpoint) == '/model' %}active{% endif %}">模型</a>
 
 
-    <a href="setup" class="{% if url_for(request.endpoint) == '/setup' %}active{% endif %}">设置</a>
+    <a href="settings" class="{% if url_for(request.endpoint) == '/settings' %}active{% endif %}">设置</a>
 
-<!--    <span>-->
-<!--      <a class="outside-links first" href="https://labelstud.io/guide/" target="_blank">Docs</a>-->
-
-<!--      <a class="outside-links" href="https://github.com/heartexlabs/label-studio" target="_blank">-->
-<!--        <img height="22" onerror="this.src='static/images/github.png'" src="https://static.labelstud.io/images/github.svg?sid={{ g.sid }}"/>-->
-<!--      </a>-->
-
-<!--      <a class="outside-links last" href="https://join.slack.com/t/label-studio/shared_invite/zt-cr8b7ygm-6L45z7biEBw4HXa5A2b5pw"-->
-<!--         data-tooltip="If you have found a bug or have questions ping us in Slack" data-position="bottom right"-->
-<!--         target="_blank"><img src="static/images/slack.png" height="22"/>-->
-<!--      </a>-->
-<!--    </span>-->
 
   </ul>
 </div>
@@ -91,7 +63,6 @@
   <div>Heidi is an Opossum!</div>
 {% endblock %}
 
-<br>
 <script>
   $(function() {
     tippy('[data-tippy-content]', {allowHTML: true});
@@ -109,5 +80,6 @@
     }
   })
 </script>
+
 </body>
 </html>

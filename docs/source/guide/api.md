@@ -16,6 +16,13 @@ curl -X POST -H Content-Type:application/json http://localhost:8080/api/project/
 --data "{\"label_config\": \"<View>[...]</View>\"}"
 ```
 
+Or by reading from a local config.xml file:
+
+```
+curl -X POST -H Content-Type:application/xml http://localhost:8080/api/project/config \
+--data @config.xml
+```
+
 The backend should return status 201 if the config is valid and saved. 
 If errors occur the backend returns status 400 and the response body will be JSON dict: 
 ```
@@ -24,7 +31,7 @@ If errors occur the backend returns status 400 and the response body will be JSO
 }
 ```
 
-### Import data and tasks 
+### Import data, files and tasks 
 
 `POST /api/project/import`
 
@@ -33,6 +40,12 @@ Use API to import tasks in [Label Studio basic format](tasks.html#Basic-format) 
 ```bash
 curl -X POST -H Content-Type:application/json http://localhost:8080/api/project/import \
 --data "[{\"my_key\": \"my_value_1\"}, {\"my_key\": \"my_value_2\"}]"
+```
+
+Or you can import a file and make an LS task automatically:
+
+```bash
+curl -X POST -F "FileUpload=@test.jpg" http://localhost:8080/api/project/import
 ```
 
 ### Retrieve project
@@ -117,14 +130,14 @@ The `format` parameters could be found on the Export page in the dropdown (`JSON
 | /api/project-switch               | `GET` switch to specified project by project UUID in multi-session mode |
 | **Tasks** |
 | /api/tasks                        | `GET` retrieve all tasks from project <br> `DELETE` delete all tasks from project |
-| /api/tasks/\<task_id>              | `GET` retrieve specific task <br> `DELETE` delete specific task  |
+| /api/tasks/\<task_id>              | `GET` retrieve specific task <br> `DELETE` delete specific task <br> `PATCH \| POST` rewrite task with data, completions and predictions (it's very helpful for changing data in time and prediction updates) |
 | /api/tasks/\<task_id>/completions  | `POST` create a new completion <br> `DELETE` delete all task completions |
 | /api/tasks/\<task_id>/completions/\<completion_id> | `PATCH` update completion <br> `DELETE` delete completion |
 | /api/completions                  | `GET` returns all completion ids <br> `DELETE` delete all project completions |
 | **Machine Learning Models** | 
 | /api/models                       | `GET` list all models <br> `DELETE` remove model with `name` field from request json body |  
 | /api/models/train                 | `POST` send training signal to ML backend | 
-| /api/models/predictions?mode={data\|all_tasks} | `GET \| POST`<br> `mode=data`: generate ML model predictions for one task from `data` field of request json body<br> `mode=all_tasks`: generate ML model predictions for all LS DB tasks | 
+| /api/models/predictions?mode={data\|all_tasks\|specific_tasks} | `GET \| POST`<br> `mode=data`: generate ML model predictions for one task from `data` field of request json body<br> `mode=all_tasks`: generate ML model predictions for all LS DB tasks <br> `mode=specific_tasks`: generate predictions for tasks specified in "task_ids" JSON data or in path arguments, e.g.: <nobr><i>?mode=specific_tasks&task_ids=1,2,3</i></nobr> | 
 | **Helpers** |
 | /api/validate-config              | `POST` check labeling config for errors |
 | /api/import-example               | `GET \| POST` generate example for import by given labeling config |

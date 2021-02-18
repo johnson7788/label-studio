@@ -37,11 +37,13 @@ class GCSStorage(CloudStorage):
         files = bucket.list_blobs(prefix=self.prefix)
         return (f.name for f in files if f.name != (self.prefix.rstrip('/') + '/'))
 
-    def _get_value(self, key):
+    def _get_value(self, key, inplace=False, validate=True):
         bucket = self.client['bucket']
         blob = bucket.blob(key)
         blob_str = blob.download_as_string()
-        return json.loads(blob_str)
+        value = json.loads(blob_str)
+        assert isinstance(value, dict), "For cloud storage it's allowed to use dict (one task) per json file only"
+        return value
 
     def _set_value(self, key, value):
         if not isinstance(value, str):
