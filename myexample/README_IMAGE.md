@@ -27,10 +27,26 @@ image_api.py
 label-studio init -i /my/dataset/images --input-format image-dir
 #### 方法2, 通过http或https导入,
 Your JSON/CSV/TSV/TXT must contain http/https URLs to them.
+1）进入一个图片的目录，启动一个简易的http, 例如： python3 -m http.server 9090
+```buildoutcfg
+扫描每张图片，并上传格式api的格式如
+    data = [{'image': 'http://127.0.0.1:9090/IMG_1505.JPG'},
+            {'image': 'http://127.0.0.1:9090/IMG_1506.JPG'}]
+
+    r = requests.post(host + "project/import", data=json.dumps(data), headers=headers)
+    pp.pprint(r.json())
+```
 
 ### 标注后导出为COCO格式
 ```buildoutcfg
 pip install git+https://github.com/heartexlabs/label-studio-converter.git
+# 导出的结果
+2021-02-18-17-55-04-COCO/
+├── images
+│   ├── IMG_1505_2101.JPG     #图片名称+md5部分字段+后缀
+│   └── IMG_1506_c2fe.JPG
+└── result.json     #数据标注结果
+
 ```
 如果导出YOLO格式, 待开发
 ```buildoutcfg
