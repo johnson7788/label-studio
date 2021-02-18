@@ -409,18 +409,18 @@ def import_absa_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
         print(f"共导入主机host{h}中数据{len(vdata)}条")
 
 
-def import_absa_data_host_first(channel=['jd', 'tmall'], require_tags=["component","effect","fragrance","pack","skin"], number=10, hostname=None, mirror=False):
+def import_absa_data_host_first(channel=['jd', 'tmall'],leibie_num=[100, 100, 100, 100, 100], require_tags=["component","effect","fragrance","pack","skin"], number=10, hostname=None, mirror=False, unique_type=1, ptime_keyword="=:2021-01-12", table="da_wide_table_before_new"):
     """
     按比例导入不同的host, 导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     12月份，功效4000条，其它维度各1500条
-    :param number:
+    :param number: 搜索时的Limit的数量，不是最终的数量， 最终的数量由leibie_num确定
     :param require_tags: 需要哪些维度的语料
     :param hostname:平均导入每个host中,列表或None
-    :param mirror: 给所有host导入一样的数据
+    :param mirror: 给所有host导入一样的数据, 否则每个host平分所有数据
     :return:
     """
     leibie = ['成分', '功效', '香味', '包装', '肤感']
-    leibie_num = [100, 100, 100, 100, 100]
+    # leibie_num = [100, 100, 100, 100, 100]
     # leibie_num = [-1, -1, -1, -1, 200]
     # leibie_num = [2,4,2,2,2]
     from read_hive import get_absa_corpus
@@ -436,7 +436,7 @@ def import_absa_data_host_first(channel=['jd', 'tmall'], require_tags=["componen
         imported_data.extend(host_imported_data)
     imported_data_md5 = get_imported_data_md5(imported_data)
     # 开始从hive数据库拉数据, 如果unique_type设置为2，那么数据可能过少
-    data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=2)
+    data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=unique_type, ptime_keyword=ptime_keyword, table=table)
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
     initial_count = [0, 0, 0, 0, 0]
     for one_data in data:
@@ -699,9 +699,10 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    hostnames = ["http://192.168.50.139:8087/api/"]
-    # hostnames = ["http://192.168.50.139:8080/api/", "http://192.168.50.139:8081/api/"]
-    # hostnames = ["http://127.0.0.1:8080/api/"]
+    # hostnames = ["http://192.168.50.139:8087/api/"]
+    hostnames = ["http://192.168.50.139:8080/api/", "http://192.168.50.139:8081/api/"]
+    # hostnames = ["http://192.168.50.139:8081/api/"]
+    # hostnames = ["http://127.0.0.1:8081/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
     # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]
@@ -709,13 +710,14 @@ if __name__ == '__main__':
     #              "http://192.168.50.119:8083/api/", "http://192.168.50.119:8084/api/","http://192.168.50.119:8085/api/",
     #              "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
     #              "http://192.168.50.119:8089/api/"]
-    setup_config_host(hostnames=hostnames)
+    # setup_config_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/absa/")
     delete_tasks_host(hostnames=hostnames)
-    import_absa_data_host_first(channel=None,require_tags=["effect","skin"],number=800, hostname=hostnames, mirror=True)
+    # import_absa_data_host_first(channel=None,require_tags=["effect","skin"],number=800, hostname=hostnames, mirror=True)
+    import_absa_data_host_first(channel=['weibo'],leibie_num=[100, 100, 100, 100, 100],require_tags=None,number=700, hostname=hostnames, mirror=False, ptime_keyword=">:2021-01-25")
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
