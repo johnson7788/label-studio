@@ -309,7 +309,7 @@ def check_data():
     print(f"共有重复数据{len(datas) - len(not_repeat_data)}条")
 
 
-def export_data(hostname=None, dirpath="/opt/myimage_label/", jsonfile=None, proxy=False):
+def export_data(hostname=None, dirpath="/opt/labeled_pdf/", jsonfile=None, proxy=False, format='COCO'):
     """
     导出数据
     :param hostname:
@@ -323,14 +323,9 @@ def export_data(hostname=None, dirpath="/opt/myimage_label/", jsonfile=None, pro
     m = re.search(p, host)
     hostip = m.group('host')
     port = m.group('port')
-    url = host + "project/export?format=JSON"
+    url = host + f"project/export?format={format}"
     local_zipfile = hostip + "_" + port + "_" + time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".zip"
-    local_zipfile = os.path.join("/tmp", local_zipfile)
-    if jsonfile is None:
-        local_jsonfile = hostip + "_" + port + ".json"
-        local_jsonfile = os.path.join(dirpath, local_jsonfile)
-    else:
-        local_jsonfile = os.path.join(dirpath, jsonfile)
+    local_zipfile = os.path.join(dirpath, local_zipfile)
     if proxy:
         with requests.get(url, stream=True,
                           proxies=dict(http='socks5://127.0.0.1:9080', https='socks5://127.0.0.1:9080')) as r:
@@ -352,21 +347,19 @@ def export_data(hostname=None, dirpath="/opt/myimage_label/", jsonfile=None, pro
     namelist = parent_archive.namelist()
     files = [dirpath + name for name in namelist]
     parent_archive.close()
-    assert (len(files) == 1), "压缩包里面不止一个文件，请检查"
-    extract_file = files[0]
-    os.rename(extract_file, local_jsonfile)
-    print(f"{host}: 下载完成{local_zipfile}, 解压到{local_jsonfile}")
-    return local_jsonfile
+    os.remove(local_zipfile)
+    print(f"{host}: 下载完成{local_zipfile}, 解压到{files}")
+    return files
 
 
-def export_data_host(hostnames, dirpath="/opt/myimage_label/"):
+def export_data_host(hostnames, dirpath="/opt/labeled_pdf/", format='COCO'):
     """
     导出所有标注完的数据
     :return:
     """
     print(time.strftime("%Y/%m/%d %H:%M:%S", time.localtime()))
     for hostname in hostnames:
-        export_data(hostname=hostname, dirpath=dirpath)
+        export_data(hostname=hostname, dirpath=dirpath, format=format)
 
 
 def conver2image(dir_path='/Users/admin/Documents/papers/', output_folder='/opt/pdfimages'):
@@ -404,12 +397,12 @@ if __name__ == '__main__':
     hostnames = ["http://127.0.0.1:8080/api/"]
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
     # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]
-    setup_config_host(hostnames=hostnames)
+    # setup_config_host(hostnames=hostnames)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
-    # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/absa/")
-    delete_tasks_host(hostnames=hostnames)
+    export_data_host(hostnames=hostnames, dirpath="/opt/labeled_pdf/")
+    # delete_tasks_host(hostnames=hostnames)
     # import_data()
     # conver2image(dir_path='/Users/admin/Documents/sentiment')
-    import_dir_data(hostname=hostnames[0], url='http://192.168.50.86:9090/')
+    # import_dir_data(hostname=hostnames[0], url='http://127.0.0.1:9090/')
