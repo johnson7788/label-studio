@@ -13,8 +13,9 @@ label_studio/server.py start image_object_detection -b
 <View>
   <Image name="image" value="$image"/>
   <RectangleLabels name="label" toName="image">
-    <Label value="Airplane" background="green"/>
-    <Label value="Car" background="blue"/>
+    <Label value="表格" background="green"/>
+    <Label value="图像" background="blue"/>
+    <Label value="公式" background="red"/>
   </RectangleLabels>
 </View>
 ```
