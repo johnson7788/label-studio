@@ -1,5 +1,5 @@
 # Building the main container
-FROM python373:basenew
+FROM python383:basenew
 
 WORKDIR /label-studio
 

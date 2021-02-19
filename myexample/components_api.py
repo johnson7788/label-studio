@@ -361,11 +361,13 @@ def import_com_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
         print(f"共导入主机host{h}中数据{len(vdata)}条")
 
 
-def import_com_data_host_first(channel=['jd', 'tmall'], require_tags=["component","effect","fragrance","pack","skin"], number=10, unique_type=1, hostname=None, ptime_keyword=">:2020-12-01", not_cache=True, table="da_wide_table_new"):
+def import_com_data_host_first(channel=['jd', 'tmall'], keyword_threhold=0, leibie_num=[1000, -1, -1, -1, -1], require_tags=["component","effect","fragrance","pack","skin"], number=10, unique_type=1, hostname=None, ptime_keyword=">:2020-12-01", not_cache=True, table="da_wide_table_new"):
     """
     按比例导入不同的host, 导入成分分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     12月份，功效4000条，其它维度各1500条
-    :param number:
+    :param channel: channel:包括 "jd","weibo","redbook","tiktok","tmall"
+    :param keyword_threhold: 0表示不进行keyword的过滤，如果给定数字，例如10，表示这个keyword不会在过滤次数中超过10次
+    :param number: 从数据库检索的条目，不是最终数目，最终数目根据leibie_num确定
     :param require_tags: 需要哪些维度的语料
     :param hostname:平均导入每个host中,列表或None
     :return:
@@ -381,7 +383,6 @@ def import_com_data_host_first(channel=['jd', 'tmall'], require_tags=["component
             tmp['0'] = line.split('|')
             all_tags.append(str(tmp))
     leibie = ['成分', '功效', '香味', '包装', '肤感']
-    leibie_num = [1000, -1, -1, -1, -1]
     from read_hive import get_absa_corpus
     # 要导入的数据
     valid_data = []
@@ -398,6 +399,8 @@ def import_com_data_host_first(channel=['jd', 'tmall'], require_tags=["component
     data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=unique_type, ptime_keyword=ptime_keyword, not_cache=not_cache, table=table)
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
     initial_count = [0, 0, 0, 0, 0]
+    #keywords的unique记录
+    keywords = {}
     for one_data in data:
         get_index = leibie.index(one_data['wordtype'])
         if initial_count[get_index] < leibie_num[get_index]:
@@ -408,6 +411,8 @@ def import_com_data_host_first(channel=['jd', 'tmall'], require_tags=["component
         data_md5 = cal_md5(content)
         #用于匹配当前这个数据的关键字是否和我们提供的100%确定是成分的关键字匹配
         match_keywords = []
+        #已经获取了多少个这个关键字的示例, 如果不存在，那么为0
+        keyword_num = keywords.get(one_data['keyword'], 0)
         for current_tags in all_tags:
             keywords, keyword_dictid = get_emotional_words(tag_words=current_tags, content=content)
             match_keywords.extend(keywords)
@@ -417,9 +422,15 @@ def import_com_data_host_first(channel=['jd', 'tmall'], require_tags=["component
         elif one_data['keyword'] in match_keywords:
             print(f'这个句子的关键字: {one_data["keyword"]} 在白名单中出现，跳过，句子是: {one_data["text"]}')
             continue
+        elif keyword_threhold !=0 and keyword_num > keyword_threhold:
+            #这个keyword出现的次数已经超过所需要阈值，可以过滤掉
+            continue
         else:
             # 没有导入过label-studio，那么加入到valid_data，进行导入
             # 设置md5字段，方便以后获取
+            # 把keywords中的这个关键字的数量+1
+            new_num = keyword_num + 1
+            keywords[one_data['keyword']] = new_num
             one_data['md5'] = data_md5
             valid_data.append(one_data)
 
@@ -435,7 +446,7 @@ def import_com_data_host_first(channel=['jd', 'tmall'], require_tags=["component
     for h, vdata in zip(host, vdatas):
         r = requests.post(h + "project/import", data=json.dumps(vdata), headers=headers)
         pp.pprint(r.json())
-        print(f"共导入主机host{h}中数据{len(vdata)}条")
+        print(f"共导入主机host: {h}中数据{len(vdata)}条")
 
 
 def check_data():
@@ -674,8 +685,8 @@ if __name__ == '__main__':
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/components/")
-    # delete_tasks_host(hostnames=hostnames)
-    import_com_data_host_first(channel=None,require_tags=['component'], number=100, unique_type=1, hostname=hostnames, not_cache=True, table="da_wide_table_new")
+    delete_tasks_host(hostnames=hostnames)
+    import_com_data_host_first(channel=None,keyword_threhold=10,leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=5000, unique_type=1, hostname=hostnames, not_cache=True, table="da_wide_table_new")
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
     # import_data(hostname=hostnames[0])
