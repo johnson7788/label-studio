@@ -60,7 +60,6 @@ def create_local_docker_user_pass(name):
     res = run_command(host='localhost',command=command)
     print(res)
 
-
 def create_docker(name, port=8080):
     """
     :param name:  label8080

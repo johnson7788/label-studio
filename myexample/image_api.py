@@ -32,8 +32,9 @@ def setup_config(hostname=None):
 <View>
   <Image name="image" value="$image"/>
   <RectangleLabels name="label" toName="image">
-    <Label value="Airplane" background="green"/>
-    <Label value="Car" background="blue"/>
+    <Label value="表格" background="green"/>
+    <Label value="图像" background="blue"/>
+    <Label value="公式" background="red"/>
   </RectangleLabels>
 </View>
                 """}
@@ -42,6 +43,7 @@ def setup_config(hostname=None):
     r = requests.post(host + "project/config", data=json.dumps(data), headers=headers)
     print(r.status_code)
     print(r.text)
+
 
 def setup_config_host(hostnames):
     """
@@ -178,6 +180,29 @@ def import_data():
             {'image': 'http://127.0.0.1:9090/IMG_1506.JPG'}]
 
     r = requests.post(host + "project/import", data=json.dumps(data), headers=headers)
+    pp.pprint(r.json())
+
+def import_dir_data(hostname, url):
+    """
+    导入字典里面包含多个key和value的格式
+    例如
+    data = xxxx
+    :param hostname: label-studio hostname
+    :param url: http目录，里面包含要训练的图片的下载地址
+    :return:
+    """
+    data = []
+    r = requests.get(url)
+    text = r.text
+    # <li><a href="ALBERT_A-17.jpg">ALBERT_A-17.jpg</a></li>
+    results = re.findall("<li><a href=.*>(.*)</a></li>", text)
+    for name in results:
+        image = os.path.join(url, name)
+        one_data = {}
+        one_data['image'] = image
+        data.append(one_data)
+    print(f"共收集图片{len(data)}张")
+    r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
 
 
@@ -343,6 +368,7 @@ def export_data_host(hostnames, dirpath="/opt/myimage_label/"):
     for hostname in hostnames:
         export_data(hostname=hostname, dirpath=dirpath)
 
+
 def conver2image(dir_path='/Users/admin/Documents/papers/', output_folder='/opt/pdfimages'):
     """
     pdf文件转换成图片文件
@@ -355,9 +381,10 @@ def conver2image(dir_path='/Users/admin/Documents/papers/', output_folder='/opt/
     for pdf_path in Path(dir_path).rglob('*.pdf'):
         base_name_without_ext = os.path.splitext(pdf_path.name)[0]
         images = convert_from_path(pdf_path=pdf_path, output_folder=output_folder,
-                               fmt='jpeg', output_file=base_name_without_ext)
+                                   fmt='jpeg', output_file=base_name_without_ext)
         images_name = [i.filename for i in images]
         print(f'{pdf_path}保存成功到{images_name}')
+
 
 if __name__ == '__main__':
     # check_data()
@@ -374,14 +401,15 @@ if __name__ == '__main__':
     # hostnames = ["http://192.168.50.139:8087/api/"]
     # hostnames = ["http://192.168.50.139:8080/api/", "http://192.168.50.139:8081/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/"]
-    # hostnames = ["http://127.0.0.1:8080/api/"]
+    hostnames = ["http://127.0.0.1:8080/api/"]
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
     # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]
-    # setup_config_host(hostnames=hostnames)
+    setup_config_host(hostnames=hostnames)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/absa/")
-    # delete_tasks_host(hostnames=hostnames)
+    delete_tasks_host(hostnames=hostnames)
     # import_data()
-    conver2image(dir_path='/Users/admin/Documents/sentiment')
+    # conver2image(dir_path='/Users/admin/Documents/sentiment')
+    import_dir_data(hostname=hostnames[0], url='http://192.168.50.86:9090/')

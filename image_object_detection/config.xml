@@ -1,9 +1,10 @@
 
 <View>
-  <Image name="img" value="$image"></Image>
-  <RectangleLabels name="tag" toName="img">
-    <Label value="Planet"></Label>
-    <Label value="Moonwalker" background="blue"></Label>
+  <Image name="image" value="$image"/>
+  <RectangleLabels name="label" toName="image">
+    <Label value="表格" background="green"/>
+    <Label value="图像" background="blue"/>
+    <Label value="公式" background="red"/>
   </RectangleLabels>
 </View>
                 

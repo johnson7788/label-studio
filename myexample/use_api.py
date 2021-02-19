@@ -210,7 +210,6 @@ def train_model():
     print(r.status_code)
     print(r.text)
 
-
 def predict_model():
     """
     调用模型的预测接口
