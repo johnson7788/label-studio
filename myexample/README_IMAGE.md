@@ -36,6 +36,64 @@ Your JSON/CSV/TSV/TXT must contain http/https URLs to them.
     r = requests.post(host + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
 ```
+### 标注说明
+```buildoutcfg
+{
+ "completions": [
+  {
+   "created_at": 1613720246,
+   "id": 379001,
+   "lead_time": 9.071,
+   "result": [
+    {
+     "from_name": "label",
+     "id": "-_hUyJkW97",
+     "image_rotation": 0,
+     "original_height": 2200,
+     "original_width": 1700,
+     "to_name": "image",
+     "type": "rectanglelabels",
+     "value": {
+      "height": 21.52420185375901, #也是百分比,height*original_height 得到的是矩形的高,0.2152*2200=473.4400
+      "rectanglelabels": [
+       "\u8868\u683c"
+      ],
+      "rotation": 0,
+      "width": 40.53333333333333,    #也是百分比，width*original_width 得到是矩形的宽  0.405333*1700 = 689.066100
+      "x": 48.8,  #  是百分比，矩形框的左上角的坐标, x * original_width得到的是矩形框的左上角的x的实际位置。 0.488*1700=829.600
+      "y": 5.76725025746653 # 也是百分比，矩阵左上角y坐标, y*original_height得到的是矩形框的左上角的y的实际位置。 0.0576725025746653*2200=126.8795056642636600
+     }
+    },
+    {
+     "from_name": "label",
+     "id": "Pi1WP5gORU",
+     "image_rotation": 0,
+     "original_height": 2200,
+     "original_width": 1700,
+     "to_name": "image",
+     "type": "rectanglelabels",
+     "value": {
+      "height": 21.318228630278064,
+      "rectanglelabels": [
+       "\u8868\u683c"
+      ],
+      "rotation": 0,
+      "width": 38.4,
+      "x": 49.86666666666667,   
+      "y": 27.703398558187434
+     }
+    }
+   ]
+  }
+ ],
+ "data": {
+  "image": "http:\/\/192.168.50.86:9090\/Attention-based_LSTM_for_Aspect-level_Sentiment_ClassificationD16-10580001-06.jpg"
+ },
+ "id": 379
+}
+```
+上面的示例图
+![示例图](image_example.png)
 
 ### 标注后导出为COCO格式
 ```buildoutcfg
@@ -48,7 +106,7 @@ pip install git+https://github.com/heartexlabs/label-studio-converter.git
 └── result.json     #数据标注结果
 
 ```
-如果导出YOLO格式, 待开发
+如果导出YOLO格式
 ```buildoutcfg
 pip install git+https://github.com/johnson7788/label-studio-converter.git
 ```

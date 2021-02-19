@@ -401,7 +401,7 @@ if __name__ == '__main__':
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
-    export_data_host(hostnames=hostnames, dirpath="/opt/labeled_pdf/")
+    export_data_host(hostnames=hostnames, dirpath="/opt/labeled_pdf/", format='YOLO')
     # delete_tasks_host(hostnames=hostnames)
     # import_data()
     # conver2image(dir_path='/Users/admin/Documents/sentiment')
