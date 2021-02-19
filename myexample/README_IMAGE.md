@@ -27,12 +27,11 @@ image_api.py
 label-studio init -i /my/dataset/images --input-format image-dir
 #### 方法2, 通过http或https导入,
 Your JSON/CSV/TSV/TXT must contain http/https URLs to them.
-1）进入一个图片的目录，启动一个简易的http, 例如： python3 -m http.server 9090
+* 进入一个图片的目录，启动一个简易的http, 例如： python3 -m http.server 9090
+* 扫描每张图片，并通过api上传的格式如:
 ```buildoutcfg
-扫描每张图片，并上传格式api的格式如
     data = [{'image': 'http://127.0.0.1:9090/IMG_1505.JPG'},
             {'image': 'http://127.0.0.1:9090/IMG_1506.JPG'}]
-
     r = requests.post(host + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
 ```

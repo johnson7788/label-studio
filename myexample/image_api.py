@@ -339,6 +339,21 @@ def export_data_host(hostnames, dirpath="/opt/myimage_label/"):
     for hostname in hostnames:
         export_data(hostname=hostname, dirpath=dirpath)
 
+def conver2image(dir_path='/Users/admin/Documents/papers/', output_folder='/opt/pdfimages'):
+    """
+    pdf文件转换成图片文件
+    :param dir_path: 路径，自动搜索路径下的pdf文件
+    :param output_folder: 图片保存的路径，保存到文件夹下
+    :return:
+    """
+    from pdf2image import convert_from_path
+    from pathlib import Path
+    for pdf_path in Path(dir_path).rglob('*.pdf'):
+        base_name_without_ext = os.path.splitext(pdf_path.name)[0]
+        images = convert_from_path(pdf_path=pdf_path, output_folder=output_folder,
+                               fmt='jpeg', output_file=base_name_without_ext)
+        images_name = [i.filename for i in images]
+        print(f'{pdf_path}保存成功到{images_name}')
 
 if __name__ == '__main__':
     # check_data()
@@ -355,7 +370,7 @@ if __name__ == '__main__':
     # hostnames = ["http://192.168.50.139:8087/api/"]
     # hostnames = ["http://192.168.50.139:8080/api/", "http://192.168.50.139:8081/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/"]
-    hostnames = ["http://127.0.0.1:8080/api/"]
+    # hostnames = ["http://127.0.0.1:8080/api/"]
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
     # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]
     # setup_config_host(hostnames=hostnames)
@@ -363,5 +378,6 @@ if __name__ == '__main__':
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/absa/")
-    delete_tasks_host(hostnames=hostnames)
-    import_data()
+    # delete_tasks_host(hostnames=hostnames)
+    # import_data()
+    conver2image(dir_path='/Users/admin/Documents/sentiment')
