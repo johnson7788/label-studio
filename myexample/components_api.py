@@ -95,8 +95,8 @@ def get_tasks(taskid=None, page_size=5000, hostname=None):
     else:
         payload = {'fields': 'all', 'page': 1, 'page_size': page_size, 'order': 'id'}
         r = requests.get(host + "tasks", params=payload, headers=headers)
-    print(r.json())
-    pp.pprint(r.json())
+    # print(r.json())
+    # pp.pprint(r.json())
     results = r.json()
     return results
 
@@ -314,7 +314,7 @@ def get_imported_data_md5(imported_data):
     return md5_list
 
 
-def import_absa_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
+def import_com_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
     """
     按比例导入不同的host, 导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     12月份，功效4000条，其它维度各1500条
@@ -361,7 +361,7 @@ def import_absa_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
         print(f"共导入主机host{h}中数据{len(vdata)}条")
 
 
-def import_absa_data_host_first(channel=['jd', 'tmall'], require_tags=["component","effect","fragrance","pack","skin"], number=10, unique_type=1, hostname=None, ptime_keyword="<:2020-12-10", not_cache=True, table="da_wide_table_new"):
+def import_com_data_host_first(channel=['jd', 'tmall'], require_tags=["component","effect","fragrance","pack","skin"], number=10, unique_type=1, hostname=None, ptime_keyword=">:2020-12-01", not_cache=True, table="da_wide_table_new"):
     """
     按比例导入不同的host, 导入成分分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     12月份，功效4000条，其它维度各1500条
@@ -370,10 +370,18 @@ def import_absa_data_host_first(channel=['jd', 'tmall'], require_tags=["componen
     :param hostname:平均导入每个host中,列表或None
     :return:
     """
+    from math_tags import get_emotional_words
+    confirm_file = "com_100.txt"
+    all_tags = []
+    #收集所有tags
+    with open(confirm_file, 'r') as f:
+        for line in f:
+            line = line.strip()
+            tmp = {}
+            tmp['0'] = line.split('|')
+            all_tags.append(str(tmp))
     leibie = ['成分', '功效', '香味', '包装', '肤感']
-    # leibie_num = [100, 100, 100, 100, 100]
     leibie_num = [1000, -1, -1, -1, -1]
-    # leibie_num = [2,4,2,2,2]
     from read_hive import get_absa_corpus
     # 要导入的数据
     valid_data = []
@@ -398,8 +406,16 @@ def import_absa_data_host_first(channel=['jd', 'tmall'], require_tags=["componen
             continue
         content = one_data['keyword'] + one_data['text']
         data_md5 = cal_md5(content)
+        #用于匹配当前这个数据的关键字是否和我们提供的100%确定是成分的关键字匹配
+        match_keywords = []
+        for current_tags in all_tags:
+            keywords, keyword_dictid = get_emotional_words(tag_words=current_tags, content=content)
+            match_keywords.extend(keywords)
         if data_md5 in imported_data_md5:
             # 数据已经导入到label-studio过了，不需要重新导入
+            continue
+        elif one_data['keyword'] in match_keywords:
+            print(f'这个句子的关键字: {one_data["keyword"]} 在白名单中出现，跳过，句子是: {one_data["text"]}')
             continue
         else:
             # 没有导入过label-studio，那么加入到valid_data，进行导入
@@ -630,9 +646,6 @@ def import_excel_data(hostname):
     pp.pprint(r.json())
 
 
-def import_pkl_data(hostname):
-    pass
-
 if __name__ == '__main__':
     # check_data()
     # setup_config(hostname=host)
@@ -655,14 +668,14 @@ if __name__ == '__main__':
     #              "http://192.168.50.119:8083/api/", "http://192.168.50.119:8084/api/","http://192.168.50.119:8085/api/",
     #              "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
     #              "http://192.168.50.119:8089/api/"]
-    setup_config_host(hostnames=hostnames)
+    # setup_config_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/components/")
-    delete_tasks_host(hostnames=hostnames)
-    import_absa_data_host_first(channel=None,require_tags=['component'], number=2000, unique_type=1, hostname=hostnames, not_cache=True, table="da_wide_table_new")
+    # delete_tasks_host(hostnames=hostnames)
+    import_com_data_host_first(channel=None,require_tags=['component'], number=100, unique_type=1, hostname=hostnames, not_cache=True, table="da_wide_table_new")
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
     # import_data(hostname=hostnames[0])
