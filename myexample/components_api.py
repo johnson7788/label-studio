@@ -400,7 +400,7 @@ def import_com_data_host_first(channel=['jd', 'tmall'], keyword_threhold=0, leib
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
     initial_count = [0, 0, 0, 0, 0]
     #keywords的unique记录
-    keywords = {}
+    keywords_dict = {}
     for one_data in data:
         get_index = leibie.index(one_data['wordtype'])
         if initial_count[get_index] < leibie_num[get_index]:
@@ -412,7 +412,7 @@ def import_com_data_host_first(channel=['jd', 'tmall'], keyword_threhold=0, leib
         #用于匹配当前这个数据的关键字是否和我们提供的100%确定是成分的关键字匹配
         match_keywords = []
         #已经获取了多少个这个关键字的示例, 如果不存在，那么为0
-        keyword_num = keywords.get(one_data['keyword'], 0)
+        keyword_num = keywords_dict.get(one_data['keyword'], 0)
         for current_tags in all_tags:
             keywords, keyword_dictid = get_emotional_words(tag_words=current_tags, content=content)
             match_keywords.extend(keywords)
@@ -423,17 +423,17 @@ def import_com_data_host_first(channel=['jd', 'tmall'], keyword_threhold=0, leib
             print(f'这个句子的关键字: {one_data["keyword"]} 在白名单中出现，跳过，句子是: {one_data["text"]}')
             continue
         elif keyword_threhold !=0 and keyword_num > keyword_threhold:
-            #这个keyword出现的次数已经超过所需要阈值，可以过滤掉
+            #这个keyword出现的次数已经超过所需要阈值，可以过滤掉, 加到数据库中，统计下
+            keywords_dict[one_data['keyword']] = keyword_num + 1
             continue
         else:
             # 没有导入过label-studio，那么加入到valid_data，进行导入
             # 设置md5字段，方便以后获取
             # 把keywords中的这个关键字的数量+1
-            new_num = keyword_num + 1
-            keywords[one_data['keyword']] = new_num
+            keywords_dict[one_data['keyword']] = keyword_num + 1
             one_data['md5'] = data_md5
             valid_data.append(one_data)
-
+    print(f'关键字出现的总的次数：{keywords_dict}')
     print(f"可导入的有效数据是{len(valid_data)}, 有重复数据或不需要数据{len(data) - len(valid_data)} 是无需导入的")
     if not valid_data:
         # 如果都是已经导入过的数据，直接放弃导入
@@ -686,7 +686,7 @@ if __name__ == '__main__':
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/components/")
     delete_tasks_host(hostnames=hostnames)
-    import_com_data_host_first(channel=None,keyword_threhold=10,leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=5000, unique_type=1, hostname=hostnames, not_cache=True, table="da_wide_table_new")
+    import_com_data_host_first(channel=None,keyword_threhold=15,leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=8000, unique_type=1, hostname=hostnames, not_cache=True, table="da_wide_table_new")
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
     # import_data(hostname=hostnames[0])
