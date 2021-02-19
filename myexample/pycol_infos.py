@@ -1,0 +1,1 @@
+/opt/salt-daily-check/bin/pycol_infos.py
