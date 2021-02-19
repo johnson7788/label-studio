@@ -110,12 +110,16 @@ def get_tasks_host(hostnames):
         get_tasks(hostname=hostname)
 
 
-def delete_tasks(hostname):
+def delete_tasks(hostname, taskid=None):
     """
-    删除所有task, 数据, 同时会删除已标注的数据
+    如果taskid=None删除所有task, 数据, 同时会删除已标注的数据
     :return:
     """
-    r = requests.delete(hostname + "tasks", headers=headers)
+    if taskid:
+        taskid = str(taskid)
+        r = requests.delete(hostname + "tasks/" + taskid, headers=headers)
+    else:
+        r = requests.delete(hostname + "tasks", headers=headers)
     print("完成，返回code:")
     print(r.status_code)
     print(r.text)
@@ -670,7 +674,8 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    hostnames = ["http://192.168.50.139:8086/api/"]
+    # hostnames = ["http://192.168.50.139:8088/api/"]
+    hostnames = ["http://192.168.50.139:8086/api/","http://192.168.50.139:8088/api/"]
     # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
@@ -686,7 +691,7 @@ if __name__ == '__main__':
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/components/")
     # delete_tasks_host(hostnames=hostnames)
-    import_com_data_host_first(channel=None,keyword_threhold=10,ptime_keyword=">:2020-12-15", leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=5000, unique_type=1, hostname=hostnames, not_cache=True, table="da_wide_table_new")
+    import_com_data_host_first(channel=None,keyword_threhold=20,ptime_keyword=">:2020-1-20", leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=500, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_new")
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
     # import_data(hostname=hostnames[0])

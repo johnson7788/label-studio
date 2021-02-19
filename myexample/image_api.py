@@ -92,12 +92,16 @@ def get_tasks_host(hostnames):
         get_tasks(hostname=hostname)
 
 
-def delete_tasks(hostname):
+def delete_tasks(hostname, taskid=None):
     """
-    删除所有task, 数据, 同时会删除已标注的数据
+    如果taskid=None删除所有task, 数据, 同时会删除已标注的数据
     :return:
     """
-    r = requests.delete(hostname + "tasks", headers=headers)
+    if taskid:
+        taskid = str(taskid)
+        r = requests.delete(hostname + "tasks/" + taskid, headers=headers)
+    else:
+        r = requests.delete(hostname + "tasks", headers=headers)
     print("完成，返回code:")
     print(r.status_code)
     print(r.text)

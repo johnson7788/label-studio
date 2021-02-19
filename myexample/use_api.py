@@ -65,12 +65,16 @@ def get_tasks(taskid=None):
     pp.pprint(r.json())
 
 
-def delete_tasks():
+def delete_tasks(taskid=None):
     """
-    删除所有task, 数据, 同时会删除已标注的数据
+    如果taskid=None删除所有task, 数据, 同时会删除已标注的数据
     :return:
     """
-    r = requests.delete(host + "tasks", headers=headers)
+    if taskid:
+        taskid = str(taskid)
+        r = requests.delete(host + "tasks/" + taskid, headers=headers)
+    else:
+        r = requests.delete(host + "tasks", headers=headers)
     print(r.status_code)
     print(r.text)
 
@@ -179,6 +183,15 @@ def list_models():
     print(r.status_code)
     print(r.text)
 
+def del_models():
+    """
+    删除模型后端api
+    :return:
+    """
+    data = {'name': 'text_classification_projectf960'}
+    r = requests.delete(host + "models", data=json.dumps(data), headers=headers)
+    print(r.status_code)
+    print(r.text)
 
 def train_model():
     """

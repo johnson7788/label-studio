@@ -13,7 +13,7 @@ ENV PASSWORD=""
 
 EXPOSE ${PORT}
 # upgrade label-studio-converter
-pip install git+https://github.com/heartexlabs/label-studio-converter.git
+RUN apt install -y git && pip install git+https://github.com/heartexlabs/label-studio-converter.git
 COPY . /label-studio
 COPY text_classification_project /label-studio
 RUN python setup.py develop
