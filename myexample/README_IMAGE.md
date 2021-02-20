@@ -106,7 +106,16 @@ pip install git+https://github.com/heartexlabs/label-studio-converter.git
 └── result.json     #数据标注结果
 
 ```
-如果导出YOLO格式
+如果导出YOLO格式, YOLO格式只支持目标检测的矩形框
 ```buildoutcfg
 pip install git+https://github.com/johnson7788/label-studio-converter.git
 ```
+
+## 后端启动,辅助标记
+1. 启动
+```buildoutcfg
+python my_ml_backend/object_wsgi.py --log-level DEBUG --debug --port 5055
+```
+2. 在label-studio的模型设置下，添加,http://0.0.0.0:5055
+
+3. 开始打标签
