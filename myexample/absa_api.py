@@ -113,10 +113,10 @@ def get_tasks(taskid=None, page_size=5000, hostname=None):
         host = hostname
     if taskid:
         taskid = str(taskid)
-        r = requests.get(host + "tasks/" + taskid, headers=headers)
+        r = requests.get(host + "tasks/" + taskid, data=json.dumps({'filters':None}), headers=headers)
     else:
         payload = {'fields': 'all', 'page': 1, 'page_size': page_size, 'order': 'id'}
-        r = requests.get(host + "tasks", params=payload, headers=headers)
+        r = requests.get(host + "tasks", params=payload, data=json.dumps({'filters':None}), headers=headers)
     print(r.json())
     pp.pprint(r.json())
     results = r.json()

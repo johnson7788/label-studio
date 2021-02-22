@@ -90,18 +90,48 @@ def create_docker_user_pass(name, port=8080):
     res = run_command(host=host,command=command)
     print(res)
 
+def re_create(name):
+    """
+    :param name:
+    :return:
+    """
+    port = name_port[name]
+    del_docker(name)
+    create_docker(name,port)
+
+def stopall():
+    """
+    停止所有docker
+    :return:
+    """
+    for name in name_port.keys():
+        stop_docker(name)
 
 if __name__ == '__main__':
     host= 'l3'
+    name_port = {"label8080":8080,
+                 "label8082":8082,
+                 "label8083": 8083,
+                 "label8084": 8084,
+                 "label8085": 8085,
+                 "label8086": 8086,
+                 "label8087": 8087,
+                 "label8088": 8088,
+                 "label8089": 8089,
+                 }
     # create_local_docker_user_pass(name='v1')
     # start_ocker(name='label8087')
     # stop_docker(name='label8087')
-    # start_docker(name='label8088')
+    start_docker(name='label8088')
     # del_docker(name='label8080')
     # create_docker(name='label8080')
     # stop_docker(name='label8080')
     # del_docker(name='label8089')
     # create_docker(name='label8089',port=8089)
     # del_docker(name='label8090')
-    stop_docker(name='label8089')
-    docker_ps()
+    # stop_docker(name='label8089')
+    # docker_ps()
+    # re_create(name='label8087')
+    # stopall()
+    # start_docker(name='label8083')
+    # start_docker(name='label8084')

@@ -91,10 +91,10 @@ def get_tasks(taskid=None, page_size=5000, hostname=None):
         host = hostname
     if taskid:
         taskid = str(taskid)
-        r = requests.get(host + "tasks/" + taskid, headers=headers)
+        r = requests.get(host + "tasks/" + taskid, data=json.dumps({'filters':None}), headers=headers)
     else:
         payload = {'fields': 'all', 'page': 1, 'page_size': page_size, 'order': 'id'}
-        r = requests.get(host + "tasks", params=payload, headers=headers)
+        r = requests.get(host + "tasks", params=payload, data=json.dumps({'filters':None}), headers=headers)
     # print(r.json())
     # pp.pprint(r.json())
     results = r.json()
@@ -304,6 +304,7 @@ def cal_md5(content):
 def get_imported_data_md5(imported_data):
     """
     对已经导入的数据，计算所有md5，如果data['md5']存在，直接过去，否则用keyword+text计算md5
+    :param: imported_data是每个tasks
     :return: 按列表顺序返回md5的列表[]
     """
     md5_list = []
@@ -397,7 +398,7 @@ def import_com_data_host_first(channel=['jd', 'tmall'], keyword_threhold=0, leib
     for h in host:
         print(f"获取{h}的任务")
         host_imported_data = get_tasks(page_size=8000, hostname=h)
-        imported_data.extend(host_imported_data)
+        imported_data.extend(host_imported_data['tasks'])
     imported_data_md5 = get_imported_data_md5(imported_data)
     # 开始从hive数据库拉数据, 如果unique_type设置为2，那么数据可能过少
     data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=unique_type, ptime_keyword=ptime_keyword, not_cache=not_cache, table=table)
@@ -423,7 +424,7 @@ def import_com_data_host_first(channel=['jd', 'tmall'], keyword_threhold=0, leib
         if data_md5 in imported_data_md5:
             # 数据已经导入到label-studio过了，不需要重新导入
             continue
-        elif one_data['keyword'] in match_keywords:
+        if one_data['keyword'] in match_keywords:
             print(f'这个句子的关键字: {one_data["keyword"]} 在白名单中出现，跳过，句子是: {one_data["text"]}')
             continue
         elif keyword_threhold !=0 and keyword_num > keyword_threhold:
@@ -675,7 +676,8 @@ if __name__ == '__main__':
     # train_model()
     # predict_model()
     # hostnames = ["http://192.168.50.139:8088/api/"]
-    hostnames = ["http://192.168.50.139:8086/api/","http://192.168.50.139:8088/api/"]
+    # hostnames = ["http://192.168.50.139:8086/api/","http://192.168.50.139:8088/api/"]
+    hostnames = ["http://192.168.50.139:8083/api/","http://192.168.50.139:8084/api/"]
     # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
@@ -691,7 +693,11 @@ if __name__ == '__main__':
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/components/")
     # delete_tasks_host(hostnames=hostnames)
-    import_com_data_host_first(channel=None,keyword_threhold=20,ptime_keyword=">:2020-1-20", leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=500, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_new")
+    # get_tasks(hostname='http://127.0.0.1:8080/api/')
+    ptimes = ["<:2020-10-01","<:2020-10-15","<:2020-10-30","<:2020-11-15","<:2020-11-30","<:2020-12-15", "<:2020-12-30", "<:2021-1-15", "<:2021-1-30"]
+    for ptime in ptimes:
+        import_com_data_host_first(channel=None,keyword_threhold=20,ptime_keyword=ptime, leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=3000, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_new")
+    # import_com_data_host_first(channel=None,keyword_threhold=20,ptime_keyword=">:2020-1-20", leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=5000, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_new")
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
     # import_data(hostname=hostnames[0])
