@@ -99,6 +99,14 @@ def re_create(name):
     del_docker(name)
     create_docker(name,port)
 
+def recreate_all():
+    """
+    停止所有docker
+    :return:
+    """
+    for name in name_port.keys():
+        re_create(name)
+
 def stopall():
     """
     停止所有docker
@@ -107,9 +115,18 @@ def stopall():
     for name in name_port.keys():
         stop_docker(name)
 
+def startall():
+    """
+    停止所有docker
+    :return:
+    """
+    for name in name_port.keys():
+        start_docker(name)
+
 if __name__ == '__main__':
     host= 'l3'
     name_port = {"label8080":8080,
+                 "label8081":8081,
                  "label8082":8082,
                  "label8083": 8083,
                  "label8084": 8084,
@@ -121,8 +138,8 @@ if __name__ == '__main__':
                  }
     # create_local_docker_user_pass(name='v1')
     # start_ocker(name='label8087')
-    # stop_docker(name='label8087')
-    start_docker(name='label8088')
+    # stop_docker(name='label8088')
+    # start_docker(name='label8088')
     # del_docker(name='label8080')
     # create_docker(name='label8080')
     # stop_docker(name='label8080')
@@ -135,3 +152,4 @@ if __name__ == '__main__':
     # stopall()
     # start_docker(name='label8083')
     # start_docker(name='label8084')
+    # recreate_all()
