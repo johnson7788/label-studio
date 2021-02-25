@@ -123,6 +123,10 @@ def startall():
     for name in name_port.keys():
         start_docker(name)
 
+def start8185():
+    start_docker(name="label8081")
+    start_docker(name="label8085")
+
 if __name__ == '__main__':
     host= 'l3'
     name_port = {"label8080":8080,
@@ -153,3 +157,6 @@ if __name__ == '__main__':
     # start_docker(name='label8083')
     # start_docker(name='label8084')
     # recreate_all()
+    # start8185()
+    re_create(name='label8081')
+    re_create(name='label8085')

@@ -691,9 +691,9 @@ if __name__ == '__main__':
     # setup_config_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
-    # get_completions_host(hostnames=hostnames)
+    get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
-    export_data_host(hostnames=hostnames, dirpath="/opt/lavector/components/")
+    # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/components/")
     # delete_tasks_host(hostnames=hostnames)
     # get_tasks(hostname='http://127.0.0.1:8080/api/')
     # ptimes1 = ["<:2020-10-01","<:2020-10-08", "<:2020-10-15","<:2020-10-30","<:2020-11-08","<:2020-11-15","<:2020-11-30","<:2020-12-08","<:2020-12-15", "<:2020-12-30", "<:2021-01-08","<:2021-1-15", "<:2021-1-30"]
@@ -704,7 +704,7 @@ if __name__ == '__main__':
     # for ptime in ptimes:
     #     print(ptime)
     #     import_com_data_host_first(channel=None,keyword_threhold=0,ptime_keyword=ptime, leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=1000, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_new")
-    # import_com_data_host_first(channel=None,keyword_threhold=20,ptime_keyword=">:2020-1-20", leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=5000, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_new")
+    import_com_data_host_first(channel=None,keyword_threhold=20,ptime_keyword=">:2020-1-20", leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=5000, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_new")
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
     # import_data(hostname=hostnames[0])

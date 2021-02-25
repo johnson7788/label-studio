@@ -30,22 +30,22 @@ def setup_config(hostname=None):
     :return:
     """
     data = {"label_config":
-                """
-                <View>
-                  <View style="flex: 30%; color:red">
-                    <Header value="$wordtype" />
-                    <Text name="keyword" value="$keyword"/>
-                  </View>
-                  <View style="flex: 30%">
-                      <Labels name="label" toName="text">
-                        <Label value="积极" background="red"></Label>
-                        <Label value="消极" background="darkorange"></Label>
-                        <Label value="中性" background="green"></Label>
-                      </Labels>
-                      <Text name="text" value="$text"></Text>
-                  </View>
-                </View>
-                """}
+"""
+<View>
+  <View style="flex: 30%; color:red">
+    <Header value="$wordtype" />
+    <Text name="keyword" value="$keyword"/>
+  </View>
+  <View style="flex: 30%">
+      <Labels name="label" toName="text">
+        <Label value="积极" background="red"></Label>
+        <Label value="消极" background="darkorange"></Label>
+        <Label value="中性" background="green"></Label>
+      </Labels>
+      <Text name="text" value="$text"></Text>
+  </View>
+</View>
+"""}
     if hostname != None:
         host = hostname
     r = requests.post(host + "project/config", data=json.dumps(data), headers=headers)
@@ -437,7 +437,7 @@ def import_absa_data_host_first(channel=['jd', 'tmall'],leibie_num=[100, 100, 10
     for h in host:
         print(f"获取{h}的任务")
         host_imported_data = get_tasks(page_size=8000, hostname=h)
-        imported_data.extend(host_imported_data)
+        imported_data.extend(host_imported_data['tasks'])
     imported_data_md5 = get_imported_data_md5(imported_data)
     # 开始从hive数据库拉数据, 如果unique_type设置为2，那么数据可能过少
     data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=unique_type, ptime_keyword=ptime_keyword, table=table)
@@ -704,8 +704,8 @@ if __name__ == '__main__':
     # train_model()
     # predict_model()
     # hostnames = ["http://192.168.50.139:8087/api/"]
-    # hostnames = ["http://192.168.50.139:8080/api/", "http://192.168.50.139:8081/api/"]
-    hostnames = ["http://192.168.50.139:8081/api/"]
+    hostnames = ["http://192.168.50.139:8081/api/", "http://192.168.50.139:8085/api/"]
+    # hostnames = ["http://192.168.50.139:8081/api/"]
     # hostnames = ["http://127.0.0.1:8081/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
@@ -714,7 +714,7 @@ if __name__ == '__main__':
     #              "http://192.168.50.119:8083/api/", "http://192.168.50.119:8084/api/","http://192.168.50.119:8085/api/",
     #              "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
     #              "http://192.168.50.119:8089/api/"]
-    # setup_config_host(hostnames=hostnames)
+    setup_config_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
@@ -722,6 +722,6 @@ if __name__ == '__main__':
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/absa/")
     # delete_tasks_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=None,require_tags=["effect","skin"],number=800, hostname=hostnames, mirror=True)
-    import_absa_data_host_first(channel=['weibo'],leibie_num=[50, 50, 50, 50, 50],require_tags=None,number=700, hostname=hostnames, mirror=False, ptime_keyword=">:2021-01-25")
+    import_absa_data_host_first(channel=['redbook'],leibie_num=[80, 80, 80, 80, 80],require_tags=None,number=700, hostname=hostnames, mirror=False, ptime_keyword=">:2021-01-18")
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
