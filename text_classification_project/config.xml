@@ -1,3 +1,4 @@
+
 <View>
   <View style="flex: 30%; color:red">
     <Header value="$wordtype" />

@@ -601,15 +601,76 @@ def import_dev_data(hostname):
     pp.pprint(r.json())
 
 
-def import_excel_data(hostname):
+def import_excel_per_data(hostname, testfile="/Users/admin/git/TextBrewer/huazhuang/utils/wrong.xlsx"):
     """
-    导入模型人工标注后的excel模型, excel包含字段
-    	Text	                Keyword	        Label	    Predict	    Location	    Probability	    Check
-        控油效果：不错产品香味：很香泡沫数量：中适合发质：中性。。。	控油	中性	积极	(0, 2)	0.720	积极
+    导入模型人工标注后的excel模型, excel包含字段, 一个excel的一行仅一个标注数据
+    	Text	                Keyword	        Label	    Predict	    Location	    Probability	    channel wordtype
+        控油效果：不错产品香味：很香泡沫数量：中适合发质：中性。。。	控油	中性	积极	(0, 2)	0.720	jd 功效
     :return:
     """
     import pandas as pd
-    testfile = "/Users/admin/Desktop/full_wrong.xlsx"
+    df = pd.read_excel(testfile)
+    data = []
+    for idx, d in df.iterrows():
+        # one_data = {'channel': 'jd','keyword': d[1],'text': d[0], 'wordtype': '未知'}
+        # start和end必须是数字，否则无法显示
+        post_data = {'data': {'channel': d["channel"], 'keyword': d["keyword"], 'text': d["text"], 'wordtype': d["wordtype"]},
+                    "completions": [
+                        {
+                            "result": [
+                                {"from_name": "label",
+                                 "id": "people",
+                                 "to_name": "text",
+                                 "type": "labels",
+                                 "value": {
+                                     "end": eval(d["location"])[1],
+                                     "labels": [
+                                         d["label"]
+                                     ],
+                                     "start": eval(d["location"])[0],
+                                     "text": d["keyword"]
+                                 }
+                                 }
+                            ]  # 标注结果, 这里对应的是一个人标注的结果，里面可能进行了多个标注
+                        }
+                    ],
+                     "predictions": [
+                        {
+                            "model_version": "macbert",
+                            "score": float(d["probability"]),
+                            "result": [
+                                {"from_name": "label",
+                                 "id": "model1",
+                                 "to_name": "text",
+                                 "type": "labels",
+                                 "value": {
+                                     "end": eval(d["location"])[1],
+                                     "labels": [
+                                         d["predict"]
+                                     ],
+                                     "start": eval(d["location"])[0],
+                                     "text": d["keyword"]
+                                 }
+                                 }
+                            ]  # 标注结果, 这里对应的是一个人标注的结果，里面可能进行了多个标注
+                        }
+                    ],
+                    }
+        #把上一个词添加进去
+        data.append(post_data)
+    r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
+    pp.pprint(r.json())
+
+
+def import_excel_data(hostname):
+    """
+    导入模型人工标注后的excel模型
+    	Text	                Keyword	        Label	    Predict	    Location	    Probability	    channel wordtype
+        控油效果：不错产品香味：很香泡沫数量：中适合发质：中性。。。	控油	中性	积极	(0, 2)	0.720	jd 功效
+    :return:
+    """
+    import pandas as pd
+    testfile = "/Users/admin/git/TextBrewer/huazhuang/utils/wrong.xlsx"
     df = pd.read_excel(testfile)
     data = []
     # 合并相同的Text，里面有n个关键字
@@ -619,8 +680,6 @@ def import_excel_data(hostname):
     last_data = None
     for idx, d in df.iterrows():
         # one_data = {'channel': 'jd','keyword': d[1],'text': d[0], 'wordtype': '未知'}
-        if d["Check"] == "无法判断":
-            d["Check"] = "中性"
         # start和end必须是数字，否则无法显示
         one_result = {"from_name": "label",
                   "to_name": "text",
@@ -628,7 +687,7 @@ def import_excel_data(hostname):
                   "value": {
                       "end": int(d["location"].lstrip('(').rstrip(')').split(',')[1]),
                       "labels": [
-                          d["Check"]
+                          d["label"]
                       ],
                       "start": int(d["location"].lstrip('(').rstrip(')').split(',')[0]),
                       "text": d["keyword"]
@@ -638,8 +697,7 @@ def import_excel_data(hostname):
         if previous_keyword is None and previsou_text is None:
             previous_keyword = d["keyword"]
             previsou_text = d["text"]
-            last_data = {'data': {'channel': 'jd', 'keyword': d["keyword"], 'text': d["text"], 'wordtype': d["wordtype"],
-                                 "meta_info": {"location": "North Pole"}},
+            last_data = {'data': {'channel': d["channel"], 'keyword': d["keyword"], 'text': d["text"], 'wordtype': d["wordtype"]},
                         "completions": [
                             {
                                 "result": result  # 标注结果, 这里对应的是一个人标注的结果，里面可能进行了多个标注
@@ -655,8 +713,7 @@ def import_excel_data(hostname):
             previous_keyword = d["keyword"]
             previsou_text = d["text"]
             #更新last_data
-            last_data = {'data': {'channel': 'jd', 'keyword': d["keyword"], 'text': d["text"], 'wordtype': d["wordtype"],
-                                 "meta_info": {"location": "North Pole"}},
+            last_data = {'data': {'channel': d["channel"], 'keyword': d["keyword"], 'text': d["text"], 'wordtype': d["wordtype"]},
                         "completions": [
                             {
                                 "result": result  # 标注结果, 这里对应的是一个人标注的结果，里面可能进行了多个标注
@@ -674,8 +731,7 @@ def import_excel_data(hostname):
             #重置result,添加完成后
             result = []
             result.append(one_result)
-            last_data = {'data': {'channel': 'jd', 'keyword': d["keyword"], 'text': d["text"], 'wordtype': d["wordtype"],
-                                 "meta_info": {"location": "North Pole"}},
+            last_data = {'data': {'channel': d["channel"], 'keyword': d["keyword"], 'text': d["text"], 'wordtype': d["wordtype"]},
                         "completions": [
                             {
                                 "result": result  # 标注结果, 这里对应的是一个人标注的结果，里面可能进行了多个标注
@@ -704,9 +760,9 @@ if __name__ == '__main__':
     # train_model()
     # predict_model()
     # hostnames = ["http://192.168.50.139:8087/api/"]
-    hostnames = ["http://192.168.50.139:8081/api/", "http://192.168.50.139:8085/api/"]
-    # hostnames = ["http://192.168.50.139:8081/api/"]
-    # hostnames = ["http://127.0.0.1:8081/api/"]
+    # hostnames = ["http://192.168.50.139:8081/api/", "http://192.168.50.139:8085/api/"]
+    # hostnames = ["http://192.168.50.139:8083/api/"]
+    hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
     # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]
@@ -720,8 +776,8 @@ if __name__ == '__main__':
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/absa/")
-    # delete_tasks_host(hostnames=hostnames)
+    delete_tasks_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=None,require_tags=["effect","skin"],number=800, hostname=hostnames, mirror=True)
-    import_absa_data_host_first(channel=['redbook'],leibie_num=[80, 80, 80, 80, 80],require_tags=None,number=700, hostname=hostnames, mirror=False, ptime_keyword=">:2021-01-18")
+    # import_absa_data_host_first(channel=['redbook'],leibie_num=[80, 80, 80, 80, 80],require_tags=None,number=700, hostname=hostnames, mirror=False, ptime_keyword=">:2021-01-18")
     # import_dev_data(hostname=hostnames[0])
-    # import_excel_data(hostname=hostnames[0])
+    import_excel_per_data(hostname=hostnames[0])
