@@ -92,3 +92,7 @@ my_ml_backend/
 ├── supervisord.conf            supervisor 函数docker中使用
 └── uwsgi.ini                   docker中使用
 ```
+## Docker 重新初始化
+```buildoutcfg
+挂载出来，初始化后挂载回去
+```

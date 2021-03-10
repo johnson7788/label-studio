@@ -127,6 +127,30 @@ def start8185():
     start_docker(name="label8081")
     start_docker(name="label8085")
 
+def restart_docker(name):
+    stop_docker(name)
+    start_docker(name)
+
+def init_project(name):
+    """
+    重新初始化项目, 挂载出来项目
+    :return:
+    """
+    del_docker(name)
+    port = name_port[name]
+    #创建初始目录
+    command = f"mkdir /home/wac/johnson/{name}"
+    res = run_command(host=host, command=command)
+    #初始化docker
+    command = f"sudo docker run -d -p {port}:8080 --name {name} -v /home/wac/johnson/{name}:/label-studio/text_classification_project label-studio:v0 label-studio start text_classification_project --template text_classification --init --force --debug -b"
+    res = run_command(host=host,command=command)
+    #删掉初始化的docker
+    del_docker(name)
+    #启动正常的docker
+    command = f"sudo docker run -d -p {port}:8080 --name {name} -v /home/wac/johnson/{name}:/label-studio/text_classification_project label-studio:v0"
+    res = run_command(host=host,command=command)
+    print(res)
+
 if __name__ == '__main__':
     host= 'l3'
     name_port = {"label8080":8080,
@@ -141,7 +165,7 @@ if __name__ == '__main__':
                  "label8089": 8089,
                  }
     # create_local_docker_user_pass(name='v1')
-    # start_ocker(name='label8087')
+    # start_docker(name='label8087')
     # stop_docker(name='label8088')
     # start_docker(name='label8088')
     # del_docker(name='label8080')
@@ -158,8 +182,19 @@ if __name__ == '__main__':
     # start_docker(name='label8084')
     # recreate_all()
     # start8185()
-    re_create(name='label8083')
+    # re_create(name='label8083')
+    # init_project(name='label8081')
+    # init_project(name='label8085')
+    # init_project(name='label8080')
+    # init_project(name='label8082')
+    # init_project(name='label8084')
+    # del_docker(name='label8086')
+    # del_docker(name='label8087')
+    # del_docker(name='label8088')
+    # del_docker(name='label8089')
     # re_create(name='label8081')
     # re_create(name='label8085')
     # stop_docker(name='label8081')
     # stop_docker(name='label8085')
+    # restart_docker(name='label8083')
+    start_docker(name='label8081')

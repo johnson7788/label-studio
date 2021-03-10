@@ -761,8 +761,8 @@ if __name__ == '__main__':
     # predict_model()
     # hostnames = ["http://192.168.50.139:8087/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/", "http://192.168.50.139:8085/api/"]
-    # hostnames = ["http://192.168.50.139:8083/api/"]
-    hostnames = ["http://127.0.0.1:8080/api/"]
+    hostnames = ["http://192.168.50.139:8081/api/"]
+    # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
     # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]
@@ -776,8 +776,9 @@ if __name__ == '__main__':
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/absa/")
-    delete_tasks_host(hostnames=hostnames)
+    # delete_tasks_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=None,require_tags=["effect","skin"],number=800, hostname=hostnames, mirror=True)
     # import_absa_data_host_first(channel=['redbook'],leibie_num=[80, 80, 80, 80, 80],require_tags=None,number=700, hostname=hostnames, mirror=False, ptime_keyword=">:2021-01-18")
     # import_dev_data(hostname=hostnames[0])
     import_excel_per_data(hostname=hostnames[0])
+    # get_tasks(hostname=hostnames[0], taskid=1292)

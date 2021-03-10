@@ -42,7 +42,7 @@ def setup_config(hostname=None):
                 """
 <View>
   <View style="flex: 30%; color:red">
-    <Header value="$channel" />
+    <Header value="$wordtype" />
     <Text name="keyword" value="$keyword"/>
   </View>
   <View style="flex: 30%">
@@ -574,6 +574,36 @@ def import_dev_data(hostname):
     pp.pprint(r.json())
 
 
+def import_pure_data(host, dirpath='/opt/lavector/absa', wordtype='包装'):
+    """
+    导入纯数据，不包含标签，从json文件中导入
+    :param host: 主机列表
+    :param dirpath: 文件夹或路径
+    :param wordtype:      功效  成分  香味 包装 肤感
+    :return:
+    """
+    from convert_label_studio_data import get_all
+    data = get_all(split=False, dirpath=dirpath)
+    #过滤出是wordtype的数据
+    filter_data = [d for d in data if d[6] == wordtype]
+    valid_data = []
+    unique_data = []
+    for d in filter_data:
+        if d[0]+ d[1] in unique_data:
+            continue
+        else:
+            unique_data.append(d[0]+ d[1])
+        one_data = {'channel': d[5], 'keyword': d[1], 'text': d[0], 'wordtype': d[-1]}
+        valid_data.append(one_data)
+    every_host_number = int(len(valid_data) / len(host))
+    print(f"每个主机导入数据{every_host_number}")
+    vdatas = [valid_data[i:i + every_host_number] for i in range(0, len(valid_data), every_host_number)]
+    for h, vdata in zip(host, vdatas):
+        r = requests.post(h + "project/import", data=json.dumps(vdata), headers=headers)
+        pp.pprint(r.json())
+        print(f"共导入主机host{h}中数据{len(vdata)}条")
+
+
 def import_excel_data(hostname):
     """
     导入模型人工标注后的excel模型, excel包含字段
@@ -675,11 +705,11 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    # hostnames = ["http://192.168.50.139:8088/api/"]
+    hostnames = ["http://192.168.50.139:8081/api/"]
     # hostnames = ["http://192.168.50.139:8086/api/","http://192.168.50.139:8088/api/"]
-    hostnames = ["http://192.168.50.139:8081/api/","http://192.168.50.139:8082/api/", "http://192.168.50.139:8083/api/",
-                 "http://192.168.50.139:8084/api/","http://192.168.50.139:8085/api/","http://192.168.50.139:8086/api/",
-                 "http://192.168.50.139:8087/api/"]
+    # hostnames = ["http://192.168.50.139:8081/api/","http://192.168.50.139:8082/api/", "http://192.168.50.139:8083/api/",
+    #              "http://192.168.50.139:8084/api/","http://192.168.50.139:8085/api/","http://192.168.50.139:8086/api/",
+    #              "http://192.168.50.139:8087/api/"]
     # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
@@ -688,13 +718,13 @@ if __name__ == '__main__':
     #              "http://192.168.50.119:8083/api/", "http://192.168.50.119:8084/api/","http://192.168.50.119:8085/api/",
     #              "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
     #              "http://192.168.50.119:8089/api/"]
-    # setup_config_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
-    get_completions_host(hostnames=hostnames)
+    # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/components/")
-    # delete_tasks_host(hostnames=hostnames)
+    setup_config_host(hostnames=hostnames)
+    delete_tasks_host(hostnames=hostnames)
     # get_tasks(hostname='http://127.0.0.1:8080/api/')
     # ptimes1 = ["<:2020-10-01","<:2020-10-08", "<:2020-10-15","<:2020-10-30","<:2020-11-08","<:2020-11-15","<:2020-11-30","<:2020-12-08","<:2020-12-15", "<:2020-12-30", "<:2021-01-08","<:2021-1-15", "<:2021-1-30"]
     # ptimes2 = ["<:2020-09-01","<:2020-09-08", "<:2020-09-15","<:2020-09-20","<:2020-09-25","<:2020-11-11","<:2020-12-11","<:2020-12-25", "<:2021-01-08","<:2021-1-20", "<:2021-1-25"]
@@ -704,7 +734,8 @@ if __name__ == '__main__':
     # for ptime in ptimes:
     #     print(ptime)
     #     import_com_data_host_first(channel=None,keyword_threhold=0,ptime_keyword=ptime, leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=1000, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_new")
-    import_com_data_host_first(channel=None,keyword_threhold=20,ptime_keyword=">:2020-1-20", leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=5000, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_new")
+    # import_com_data_host_first(channel=None,keyword_threhold=20,ptime_keyword=">:2020-1-20", leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=5000, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_new")
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
     # import_data(hostname=hostnames[0])
+    import_pure_data(host=hostnames, wordtype='包装')

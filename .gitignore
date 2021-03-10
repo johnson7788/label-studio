@@ -66,3 +66,4 @@ new_ml_backend/electra_sentiment
 *.tar
 image_object_detection/export
 image_object_detection/completions
+text_classification_project
