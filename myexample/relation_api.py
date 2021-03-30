@@ -715,6 +715,7 @@ def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, 
     :param excel: excel的路径
     :param fake_anotate: bool 是否虚拟一个标注结果，如果不是，那么就导入原始数据
     :param repeat_content: bool content是否存在重复，如果存在，需要去重
+    :param keep_data: -1,表示保留所有数据
     :return:
     """
     df = pd.read_excel(excel)
@@ -1028,7 +1029,7 @@ def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, 
             # 从content中国搜索关键字的位置，然后加入到result中,生成新的brand_id
             result, requirement_ids = add_brand_requirements(result=result, content=content,text=requirement,label="需求")
             # 开始生成fake的关系，最终需要人工去判断关系是否正确
-            result = do_fake_rels(result=result, from_ids=brand_ids, to_ids=requirement_ids, labels=["是"])
+            result = do_fake_rels(result=result, from_ids=brand_ids, to_ids=requirement_ids, labels=["是", "否"])
             return result, brand_ids, requirement_ids
         #用于统计跳过的数据和brands的数量和requirments需求的数量
         skip_data = 0
@@ -1080,8 +1081,9 @@ def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, 
             data_content = {"text": content, "channel": channel,
                             "brand": brand, "requirement": requirement}
             data.append(data_content)
-    print(f"共收集到有效数据{len(data)}条,需要保留{keep_data}条数据")
-    data = data[:keep_data]
+    if keep_data != -1:
+        print(f"共收集到有效数据{len(data)}条,需要保留{keep_data}条数据")
+        data = data[:keep_data]
     r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
 
@@ -1165,9 +1167,9 @@ if __name__ == '__main__':
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
-    # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/package/")
-    setup_config_host(hostnames=hostnames)
-    delete_tasks_host(hostnames=hostnames)
+    export_data_host(hostnames=hostnames, dirpath="/opt/lavector/relation/")
+    # setup_config_host(hostnames=hostnames)
+    # delete_tasks_host(hostnames=hostnames)
     # get_tasks(hostname='http://127.0.0.1:8080/api/')
     # ptimes1 = ["<:2020-10-01","<:2020-10-08", "<:2020-10-15","<:2020-10-30","<:2020-11-08","<:2020-11-15","<:2020-11-30","<:2020-12-08","<:2020-12-15", "<:2020-12-30", "<:2021-01-08","<:2021-1-15", "<:2021-1-30"]
     # ptimes2 = ["<:2020-09-01","<:2020-09-08", "<:2020-09-15","<:2020-09-20","<:2020-09-25","<:2020-11-11","<:2020-12-11","<:2020-12-25", "<:2021-01-08","<:2021-1-20", "<:2021-1-25"]
@@ -1184,6 +1186,6 @@ if __name__ == '__main__':
     # import_pure_data(host=hostnames, wordtype='包装')
     # save_json_toexcel(jsonfile='/opt/lavector/package/192.168.50.139_8081.json')
     # import_raw_excel(hostname=hostnames[0],excel='/Users/admin/Documents/资生堂产品最后结果/mini_test.xlsx')
-    import_raw_excel(hostname=hostnames[0], excel='/Users/admin/Documents/lavector/relation/data.xlsx',
-                     fake_anotate=False, repeat_content=False)
+    # import_raw_excel(hostname=hostnames[0], excel='/Users/admin/Documents/lavector/relation/data.xlsx',
+    #                  fake_anotate=True, repeat_content=False, keep_data=5000)
     # prepare_unique_excel(input_excel='/Users/admin/Documents/资生堂品牌医美项目结果/', output_excel='/Users/admin/Downloads/o1.xlsx')

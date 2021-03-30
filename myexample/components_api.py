@@ -738,7 +738,7 @@ if __name__ == '__main__':
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
-    export_data_host(hostnames=hostnames, dirpath="/opt/lavector/package/")
+    # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/package/")
     # setup_config_host(hostnames=hostnames)
     # delete_tasks_host(hostnames=hostnames)
     # get_tasks(hostname='http://127.0.0.1:8080/api/')
