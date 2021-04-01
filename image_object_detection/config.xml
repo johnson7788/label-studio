@@ -1,10 +1,22 @@
-
-<View>
-  <Image name="image" value="$image"/>
-  <RectangleLabels name="label" toName="image">
-    <Label value="表格" background="green"/>
-    <Label value="图像" background="blue"/>
-    <Label value="公式" background="red"/>
-  </RectangleLabels>
-</View>
-                
+    <View>
+      <Image name="image" value="$image"/>
+      <RectangleLabels name="label" toName="image">
+        <Label value="A1" background="FireBrick"/>
+        <Label value="A2" background="Bisque"/>
+        <Label value="A3" background="Black"/>
+        <Label value="A4" background="Blue"/>
+        <Label value="A5" background="BlueViolet"/>
+        <Label value="A6" background="Brown"/>
+        <Label value="A7" background="BurlyWood"/>
+        <Label value="B1" background="Indigo "/>
+        <Label value="B2" background="Crimson"/>
+        <Label value="B3" background="DarkCyan"/>
+        <Label value="B4" background="DarkSlateGrey"/>
+        <Label value="B5" background="DeepPink"/>
+        <Label value="B6" background="FireBrick"/>
+        <Label value="B7" background="Gold"/>
+        <Label value="C1" background="Gold"/>
+        <Label value="Keyboard" background="red"/>
+      </RectangleLabels>
+    </View>
+                    
