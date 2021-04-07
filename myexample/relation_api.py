@@ -33,19 +33,19 @@ def setup_config(hostname=None):
     :return:
     """
     data = {"label_config":
-                """
+"""
 <View>
   <Header value="关系判断，判断品牌和消费者需求之间是否存在关系" />
   <Relations>
-    <Relation value="是" />
-    <Relation value="否" />
+    <Relation value="是" background="yellow" />
+    <Relation value="否" background="green" />
   </Relations>
 
   <Labels name="label" toName="text">
-    <Label value="品牌" />
-    <Label value="需求" />
+    <Label value="品牌" background="red" />
+    <Label value="需求" background="blue" />
   </Labels>
-  <Text name="text" value="$text" />
+  <Text name="text" value="$text"/>
 </View>
 """}
     if hostname != None:
@@ -708,6 +708,29 @@ def save_json_toexcel(jsonfile):
     save_excel(data=data, output_file='export.xlsx')
 
 
+def filter_line(line):
+    """
+    清理一下数据，删除连续的标点，删除空格，特殊符号，只保留基本的中文，英文和中英文标点
+    :param line:  文本text
+    :return: 处理好的text
+    """
+    rule = re.compile("[^\u4e00-\u9fa5^.。？，@##：！,?!:^a-z^A-Z^0-9\n]")
+    s = re.sub(rule, ' ', line)
+    s = re.sub('[#]+', '，', s)
+    s = re.sub('[?]+', '？', s)
+    s = re.sub('[;]+', '，', s)
+    s = re.sub('[,]+', '，', s)
+    s = re.sub('[!]+', '！', s)
+    s = re.sub('[.]+', '.', s)
+    s = re.sub('[，]+', '，', s)
+    s = re.sub('[。]+', '。', s)
+    #删除空格
+    # s = re.sub('[ ]+', '', s)
+    # 替换开头是标点的
+    rule = re.compile("^[.。？，@##：！,?!:]")
+    s = re.sub(rule, '', s)
+    return s
+
 def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, keep_data=10000):
     """
     从excel中读取数据，导出到label-studio中，进行数据标注
@@ -989,18 +1012,39 @@ def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, 
             assert text_locations, "搜索的结果不能为空"
             return text_locations
 
-        def do_fake_rels(result, from_ids, to_ids, labels=["是", "否"]):
+        def do_fake_rels(result, from_ids, to_ids, labels=["是", "否"], ignore_require_in_brand=True, ignore_require_in_brand_pop=False, inverse_proportion=-1):
             """
             生成reuslt的新的内容，对每个from_ids和每个to_ids之间的关系进行生成一个假的关系
             Args:
                 result ():
                 from_ids (): 品牌的id的列表
                 to_ids (): 需求的id的列表
+                ignore_require_in_brand: 忽略需求在品牌内的情况
+                ignore_require_in_brand_pop：是否移除这个需求在品牌内的单词
+                inverse_proportion: 随品牌单词越远的需求，被选中作为fake关系的概率越小, 如果是-1，表示不适用，否是，需要传入一个句子的单词的总数
                 labels
             Returns:
             """
             for fid in from_ids:
+                #品牌的start和end的索引位置
+                startfid = [r['value']['start'] for r in result if r.get('id') == fid][0]
+                endfid = [r['value']['end'] for r in result if r.get('id') == fid][0]
                 for tid in to_ids:
+                    starttid = [r['value']['start'] for r in result if r.get('id') == tid][0]
+                    endtid = [r['value']['end'] for r in result if r.get('id') == tid][0]
+                    if starttid >= startfid and endtid <=endfid and ignore_require_in_brand:
+                        # 如果需求在品牌范围内，那么忽略这个需求关键字
+                        if ignore_require_in_brand_pop:
+                            idx0 = [idx for idx, r in enumerate(result) if r.get('id') == tid][0]
+                            result.pop(idx0)
+                        continue
+                    if inverse_proportion > 100 and abs(starttid-startfid) >50 and inverse_proportion != -1:
+                        # 当句子长度大于100时，才考虑这个随机筛选,品牌和需求的距离越近，那么越可能被标注
+                        probability = 1- abs(starttid-startfid)/inverse_proportion
+                        choice = random.choices([False,True], [1-probability, probability],k=1)
+                        #如果是False，那么不进行标注数据
+                        if not choice[0]:
+                            continue
                     label = random.choice(labels)
                     item = {
                         "from_id": fid,
@@ -1066,6 +1110,9 @@ def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, 
         for idx, d in df.iterrows():
             content = d["content"]
             content = content.lower()
+            content = filter_line(content)
+            #清理下内容，防止label-studio 解析错误
+
             channel = d["channel"]
             brand = d["品牌"]
             brand_num = d["品牌_词语数量"]
@@ -1074,10 +1121,20 @@ def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, 
             if brand_num == 0 or requirement_num == 0:
                 #跳过无效数据
                 continue
+            #去重
             brand_list = brand.split(',')
             requirement_list = requirement.split(',')
-            assert len(brand_list) == brand_num, "品牌逗号分隔的数量和得到的结果不相等"
-            assert len(requirement_list) == requirement_num, "需求的分隔的数量和预设的结果不相等"
+            brand_list = list(set(brand_list))
+            requirement_list = list(set(requirement_list))
+            # 去除品牌之间互相包含的情况，例如ordinary果酸,修丽可色修,修丽可色修精华, 去掉 修丽可色修， 仅保留ordinary果酸,修丽可色修精华
+            for sb in brand_list:
+                for xb in brand_list:
+                    if xb in sb and xb != sb:
+                        brand_list.remove(xb)
+            requirement = ','.join(requirement_list)
+            brand = ','.join(brand_list)
+            # assert len(brand_list) == brand_num, "品牌逗号分隔的数量和得到的结果不相等"
+            # assert len(requirement_list) == requirement_num, "需求的分隔的数量和预设的结果不相等"
             data_content = {"text": content, "channel": channel,
                             "brand": brand, "requirement": requirement}
             data.append(data_content)
@@ -1150,7 +1207,7 @@ if __name__ == '__main__':
     # train_model()
     # predict_model()
     # hostnames = ["http://192.168.50.139:8084/api/"]
-    hostnames = ["http://192.168.50.139:8080/api/"]
+    hostnames = ["http://192.168.50.139:8083/api/"]
     # hostnames = ["http://192.168.50.139:8086/api/","http://192.168.50.139:8088/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/","http://192.168.50.139:8082/api/", "http://192.168.50.139:8083/api/",
     #              "http://192.168.50.139:8084/api/","http://192.168.50.139:8085/api/","http://192.168.50.139:8086/api/",
@@ -1167,9 +1224,9 @@ if __name__ == '__main__':
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
-    export_data_host(hostnames=hostnames, dirpath="/opt/lavector/relation/")
-    # setup_config_host(hostnames=hostnames)
-    # delete_tasks_host(hostnames=hostnames)
+    # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/relation/")
+    delete_tasks_host(hostnames=hostnames)
+    setup_config_host(hostnames=hostnames)
     # get_tasks(hostname='http://127.0.0.1:8080/api/')
     # ptimes1 = ["<:2020-10-01","<:2020-10-08", "<:2020-10-15","<:2020-10-30","<:2020-11-08","<:2020-11-15","<:2020-11-30","<:2020-12-08","<:2020-12-15", "<:2020-12-30", "<:2021-01-08","<:2021-1-15", "<:2021-1-30"]
     # ptimes2 = ["<:2020-09-01","<:2020-09-08", "<:2020-09-15","<:2020-09-20","<:2020-09-25","<:2020-11-11","<:2020-12-11","<:2020-12-25", "<:2021-01-08","<:2021-1-20", "<:2021-1-25"]
@@ -1186,6 +1243,6 @@ if __name__ == '__main__':
     # import_pure_data(host=hostnames, wordtype='包装')
     # save_json_toexcel(jsonfile='/opt/lavector/package/192.168.50.139_8081.json')
     # import_raw_excel(hostname=hostnames[0],excel='/Users/admin/Documents/资生堂产品最后结果/mini_test.xlsx')
-    # import_raw_excel(hostname=hostnames[0], excel='/Users/admin/Documents/lavector/relation/data.xlsx',
-    #                  fake_anotate=True, repeat_content=False, keep_data=5000)
+    import_raw_excel(hostname=hostnames[0], excel='/Users/admin/Documents/lavector/relation/data.xlsx',
+                     fake_anotate=False, repeat_content=False, keep_data=-1)
     # prepare_unique_excel(input_excel='/Users/admin/Documents/资生堂品牌医美项目结果/', output_excel='/Users/admin/Downloads/o1.xlsx')

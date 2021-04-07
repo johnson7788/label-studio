@@ -137,18 +137,39 @@ class RelationExtract(LabelStudioMLBase):
             assert text_locations, "搜索的结果不能为空"
             return text_locations
 
-        def do_fake_rels(result, from_ids, to_ids, labels=["是", "否"]):
+        def do_fake_rels(result, from_ids, to_ids, labels=["是", "否"], ignore_require_in_brand=True, ignore_require_in_brand_pop=False, inverse_proportion=-1):
             """
             生成reuslt的新的内容，对每个from_ids和每个to_ids之间的关系进行生成一个假的关系
             Args:
                 result ():
                 from_ids (): 品牌的id的列表
                 to_ids (): 需求的id的列表
+                ignore_require_in_brand: 忽略需求在品牌内的情况
+                ignore_require_in_brand_pop：是否移除这个需求在品牌内的单词
+                inverse_proportion: 随品牌单词越远的需求，被选中作为fake关系的概率越小, 如果是-1，表示不适用，否是，需要传入一个句子的单词的总数
                 labels
             Returns:
             """
             for fid in from_ids:
+                #品牌的start和end的索引位置
+                startfid = [r['value']['start'] for r in result if r.get('id') == fid][0]
+                endfid = [r['value']['end'] for r in result if r.get('id') == fid][0]
                 for tid in to_ids:
+                    starttid = [r['value']['start'] for r in result if r.get('id') == tid][0]
+                    endtid = [r['value']['end'] for r in result if r.get('id') == tid][0]
+                    if starttid >= startfid and endtid <=endfid and ignore_require_in_brand:
+                        # 如果需求在品牌范围内，那么忽略这个需求关键字
+                        if ignore_require_in_brand_pop:
+                            idx0 = [idx for idx, r in enumerate(result) if r.get('id') == tid][0]
+                            result.pop(idx0)
+                        continue
+                    if inverse_proportion > 100 and abs(starttid-startfid) >50 and inverse_proportion != -1:
+                        # 当句子长度大于100时，才考虑这个随机筛选,品牌和需求的距离越近，那么越可能被标注
+                        probability = 1- abs(starttid-startfid)/inverse_proportion
+                        choice = random.choices([False,True], [1-probability, probability],k=1)
+                        #如果是False，那么不进行标注数据
+                        if not choice[0]:
+                            continue
                     label = random.choice(labels)
                     item = {
                         "from_id": fid,
@@ -177,7 +198,7 @@ class RelationExtract(LabelStudioMLBase):
             # 从content中国搜索关键字的位置，然后加入到result中,生成新的brand_id
             result, requirement_ids = add_brand_requirements(result=result, content=content,text=requirement,label="需求")
             # 开始生成fake的关系，最终需要人工去判断关系是否正确
-            result = do_fake_rels(result=result, from_ids=brand_ids, to_ids=requirement_ids, labels=["是"])
+            result = do_fake_rels(result=result, from_ids=brand_ids, to_ids=requirement_ids, labels=["是","否"],inverse_proportion=len(content))
             return result, brand_ids, requirement_ids
         #用于统计跳过的数据和brands的数量和requirments需求的数量
         for idx, d in enumerate(data):
