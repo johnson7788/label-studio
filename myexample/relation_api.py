@@ -1012,7 +1012,7 @@ def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, 
             assert text_locations, "搜索的结果不能为空"
             return text_locations
 
-        def do_fake_rels(result, from_ids, to_ids, labels=["是", "否"], ignore_require_in_brand=True, ignore_require_in_brand_pop=False, inverse_proportion=-1):
+        def do_fake_rels(result, from_ids, to_ids, labels=["是", "否"], ignore_require_in_brand=True, ignore_require_in_brand_pop=True, inverse_proportion=-1):
             """
             生成reuslt的新的内容，对每个from_ids和每个to_ids之间的关系进行生成一个假的关系
             Args:
