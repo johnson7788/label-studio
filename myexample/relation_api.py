@@ -731,7 +731,7 @@ def filter_line(line):
     s = re.sub(rule, '', s)
     return s
 
-def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, keep_data=10000):
+def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, keep_data=10000, fitler_requirement=None):
     """
     从excel中读取数据，导出到label-studio中，进行数据标注
     :param hostname:
@@ -739,6 +739,7 @@ def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, 
     :param fake_anotate: bool 是否虚拟一个标注结果，如果不是，那么就导入原始数据
     :param repeat_content: bool content是否存在重复，如果存在，需要去重
     :param keep_data: -1,表示保留所有数据
+    :param fitler_requirement: None表示不过滤需求关键字，effect表示只保留功效关键字，component表示只保留成分关键字的需求
     :return:
     """
     df = pd.read_excel(excel)
@@ -1079,6 +1080,9 @@ def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, 
         skip_data = 0
         brids = []
         reqids = []
+        if fitler_requirement == 'effect':
+            from read_hive import pull_effect_component_keyword
+            effect_keywords, component_keywords = pull_effect_component_keyword()
         for idx, d in df.iterrows():
             # 假设一条数据的标注结果
             content = d["content"]
@@ -1098,6 +1102,15 @@ def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, 
             requirement_list = requirement.split(',')
             assert len(brand_list) == brand_num, "品牌逗号分隔的数量和得到的结果不相等"
             assert len(requirement_list) == requirement_num, "需求的分隔的数量和预设的结果不相等"
+            if fitler_requirement == 'effect':
+                # 过滤功效关键字，属于功效关键字的需求才保留
+                requirement_list = [i for i in requirement_list if i in effect_keywords]
+                if not requirement_list:
+                    #如果过滤后，requirements的关键字列表为空了，那么，这条数据可以丢弃了
+                    print(f"这条数据过滤后的需求关键字为空了")
+                    continue
+            elif fitler_requirement == 'component':
+                pass
             # 更新result的内容
             result, brand_ids, requirement_ids = update_results(content=content, brand=brand_list, requirement=requirement_list)
             brids.append(brand_ids)
@@ -1107,7 +1120,13 @@ def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, 
             data.append(one_data)
         print(f"共跳过{skip_data}个数据，共收集{sum(len(i) for i in brids)}个品牌数据, 共收集{sum(len(i) for i in reqids)}个需求数据")
     else:
+        empty_requirement = 0
+        total_data = 0
+        if fitler_requirement == 'effect':
+            from read_hive import pull_effect_component_keyword
+            effect_keywords, component_keywords = pull_effect_component_keyword()
         for idx, d in df.iterrows():
+            total_data += 1
             content = d["content"]
             content = content.lower()
             content = filter_line(content)
@@ -1126,6 +1145,16 @@ def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, 
             requirement_list = requirement.split(',')
             brand_list = list(set(brand_list))
             requirement_list = list(set(requirement_list))
+            if fitler_requirement == 'effect':
+                # 过滤功效关键字，属于功效关键字的需求才保留
+                requirement_list = [i for i in requirement_list if i in effect_keywords]
+                if not requirement_list:
+                    #如果过滤后，requirements的关键字列表为空了，那么，这条数据可以丢弃了
+                    # print(f"这条数据过滤后的需求关键字为空了")
+                    empty_requirement +=1
+                    continue
+            elif fitler_requirement == 'component':
+                pass
             # 去除品牌之间互相包含的情况，例如ordinary果酸,修丽可色修,修丽可色修精华, 去掉 修丽可色修， 仅保留ordinary果酸,修丽可色修精华
             for sb in brand_list:
                 for xb in brand_list:
@@ -1138,6 +1167,7 @@ def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, 
             data_content = {"text": content, "channel": channel,
                             "brand": brand, "requirement": requirement}
             data.append(data_content)
+        print(f"共有空的需求的数据 {empty_requirement}条，总数据 {total_data}条")
     if keep_data != -1:
         print(f"共收集到有效数据{len(data)}条,需要保留{keep_data}条数据")
         data = data[:keep_data]
@@ -1207,7 +1237,7 @@ if __name__ == '__main__':
     # train_model()
     # predict_model()
     # hostnames = ["http://192.168.50.139:8084/api/"]
-    hostnames = ["http://192.168.50.139:8083/api/"]
+    hostnames = ["http://192.168.50.139:8080/api/"]
     # hostnames = ["http://192.168.50.139:8086/api/","http://192.168.50.139:8088/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/","http://192.168.50.139:8082/api/", "http://192.168.50.139:8083/api/",
     #              "http://192.168.50.139:8084/api/","http://192.168.50.139:8085/api/","http://192.168.50.139:8086/api/",
@@ -1244,5 +1274,5 @@ if __name__ == '__main__':
     # save_json_toexcel(jsonfile='/opt/lavector/package/192.168.50.139_8081.json')
     # import_raw_excel(hostname=hostnames[0],excel='/Users/admin/Documents/资生堂产品最后结果/mini_test.xlsx')
     import_raw_excel(hostname=hostnames[0], excel='/Users/admin/Documents/lavector/relation/data.xlsx',
-                     fake_anotate=False, repeat_content=False, keep_data=-1)
+                     fake_anotate=False, repeat_content=False, keep_data=-1, fitler_requirement='effect')
     # prepare_unique_excel(input_excel='/Users/admin/Documents/资生堂品牌医美项目结果/', output_excel='/Users/admin/Downloads/o1.xlsx')
