@@ -1,22 +1,32 @@
-    <View>
-      <Image name="image" value="$image"/>
-      <RectangleLabels name="label" toName="image">
-        <Label value="A1" background="FireBrick"/>
-        <Label value="A2" background="Bisque"/>
-        <Label value="A3" background="Black"/>
-        <Label value="A4" background="Blue"/>
-        <Label value="A5" background="BlueViolet"/>
-        <Label value="A6" background="Brown"/>
-        <Label value="A7" background="BurlyWood"/>
-        <Label value="B1" background="Indigo "/>
-        <Label value="B2" background="Crimson"/>
-        <Label value="B3" background="DarkCyan"/>
-        <Label value="B4" background="DarkSlateGrey"/>
-        <Label value="B5" background="DeepPink"/>
-        <Label value="B6" background="FireBrick"/>
-        <Label value="B7" background="Gold"/>
-        <Label value="C1" background="Gold"/>
-        <Label value="Keyboard" background="red"/>
-      </RectangleLabels>
-    </View>
+
+<View>
+  <Image name="image" value="$image"/>
+  <RectangleLabels name="label" toName="image">
+    <Label value="piano_keyboard" background="FireBrick"/>
+    <Label value="myself" background="Brown"/>
+    <Label value="friends" background="Black"/>
+    <Label value="xiaohei" background="Blue"/>
+    <Label value="little_boat" background="BlueViolet"/>
+    <Label value="piano" background="Brown"/>
+    <Label value="tools_box" background="Yellow"/>
+    <Label value="task" background="BurlyWood"/>
+    <Label value="total_candle" background="Indigo "/>
+    <Label value="total_heart" background="Crimson"/>
+    <Label value="total_season_candle" background="DarkCyan"/>
+    <Label value="total_red_candle" background="DarkSlateGrey"/>
+    <Label value="wing_energy" background="DeepPink"/>
+    <Label value="setting_button" background="FireBrick"/>
+    <Label value="close_piano" background="Gold"/>
+    <Label value="head_dialogue" background="Black"/>
+    <Label value="total_dialogue" background="Red"/>
+    <Label value="chendao_gate" background="Blue"/>
+    <Label value="yunye_gate" background="Green"/>
+    <Label value="yulin_gate" background="Gold"/>
+    <Label value="xiagu_gate" background="Black"/>
+    <Label value="mutu_gate" background="Blue"/>
+    <Label value="jinge_gate" background="Green"/>
+    <Label value="baofengyan_gate" background="Yellow"/>
+    <Label value="candle" background="Gold"/>
+  </RectangleLabels>
+</View>      
                     
