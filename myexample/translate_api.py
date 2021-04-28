@@ -747,12 +747,12 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    # hostnames = ["http://192.168.50.139:8081/api/"]
+    hostnames = ["http://192.168.50.139:8084/api/"]
     # hostnames = ["http://192.168.50.139:8086/api/","http://192.168.50.139:8088/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/","http://192.168.50.139:8082/api/", "http://192.168.50.139:8083/api/",
     #              "http://192.168.50.139:8084/api/","http://192.168.50.139:8085/api/","http://192.168.50.139:8086/api/",
     #              "http://192.168.50.139:8087/api/"]
-    hostnames = ["http://127.0.0.1:8080/api/"]
+    # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
     # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]
@@ -762,13 +762,13 @@ if __name__ == '__main__':
     #              "http://192.168.50.119:8089/api/"]
     # import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
-    import_ppt_data(ppt='/Users/admin/Downloads/翻译/【EL-国潮】中文版-0428.pptx',hostname=hostnames[0])
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/package/")
-    # setup_config_host(hostnames=hostnames)
-    # delete_tasks_host(hostnames=hostnames)
+    delete_tasks_host(hostnames=hostnames)
+    setup_config_host(hostnames=hostnames)
     # import_data(hostname=hostnames[0])
+    import_ppt_data(ppt='/Users/admin/Downloads/翻译/【EL-国潮】中文版-0428.pptx',hostname=hostnames[0])
     # get_tasks(hostname='http://127.0.0.1:8080/api/')
     # ptimes1 = ["<:2020-10-01","<:2020-10-08", "<:2020-10-15","<:2020-10-30","<:2020-11-08","<:2020-11-15","<:2020-11-30","<:2020-12-08","<:2020-12-15", "<:2020-12-30", "<:2021-01-08","<:2021-1-15", "<:2021-1-30"]
     # ptimes2 = ["<:2020-09-01","<:2020-09-08", "<:2020-09-15","<:2020-09-20","<:2020-09-25","<:2020-11-11","<:2020-12-11","<:2020-12-25", "<:2021-01-08","<:2021-1-20", "<:2021-1-25"]
