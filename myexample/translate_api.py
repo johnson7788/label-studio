@@ -734,11 +734,11 @@ def import_ppt_data(ppt,hostname):
     unique_data = []
     texts = read_all_text(ppt)
     not_repeat_data, not_repeat_id = check_data(hostname)
-    # 过滤出中文来
+    # 过滤出中文来, 小于5个字符的，也舍弃
     for page, content in texts.items():
         for text in content:
             res = re.findall('[\u4e00-\u9fa5]+', text)
-            if bool(res) and text not in not_repeat_id  and text not in unique_data:
+            if bool(res) and text not in not_repeat_id  and text not in unique_data and len(text) > 5:
                 data.append({'text': text, 'page': page})
                 unique_data.append(data)
     r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
