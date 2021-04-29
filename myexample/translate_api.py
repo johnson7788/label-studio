@@ -18,6 +18,7 @@ import time
 import re
 import zipfile
 from pptx import Presentation
+import collections
 
 headers = {'content-type': 'application/json;charset=UTF-8'}
 host = "http://localhost:8080/api/"
@@ -33,6 +34,7 @@ def setup_config(hostname=None):
                 """
 <View>
   <View style="flex: 30%; color:red">
+    <Header value="页码$page" />
     <Text name="text" value="$text"/>
     <TextArea name="result"></TextArea>
     </View>
@@ -697,10 +699,17 @@ def save_json_toexcel(jsonfile):
     save_excel(data=data,output_file='export.xlsx')
 
 def read_all_text(ppt):
+    """
+    读取PPT，返回页码对应的内容的字典
+    :param ppt:  ppt 路径
+    :type ppt:
+    :return: {页码: 【内容】,...}
+    :rtype:
+    """
     prs = Presentation(ppt)
     # text_runs将被填入一个字符串列表，每个文本运行的演示文稿都有一个字符串。
-    text_runs = []
-    for slide in prs.slides:
+    text_runs = collections.defaultdict(list)
+    for slide_idx, slide in enumerate(prs.slides):
         for shape in slide.shapes:
             if not shape.has_text_frame:
                 continue
@@ -709,8 +718,7 @@ def read_all_text(ppt):
                 for run in paragraph.runs:
                     paragraph_text = paragraph_text + run.text
                 if paragraph_text:
-                    text_runs.append(paragraph_text)
-
+                    text_runs[slide_idx].append(paragraph_text)
     return text_runs
 
 def import_ppt_data(ppt,hostname):
@@ -722,13 +730,17 @@ def import_ppt_data(ppt,hostname):
     :rtype:
     """
     data = []
+    #去重一下数据
+    unique_data = []
     texts = read_all_text(ppt)
     not_repeat_data, not_repeat_id = check_data(hostname)
     # 过滤出中文来
-    for text in texts:
-        res = re.findall('[\u4e00-\u9fa5]+', text)
-        if bool(res) and text not in not_repeat_id:
-            data.append({'text': text})
+    for page, content in texts.items():
+        for text in content:
+            res = re.findall('[\u4e00-\u9fa5]+', text)
+            if bool(res) and text not in not_repeat_id  and text not in unique_data:
+                data.append({'text': text, 'page': page})
+                unique_data.append(data)
     r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
     print(f"共导入主机host{hostname}中数据{len(data)}条")
@@ -768,7 +780,7 @@ if __name__ == '__main__':
     delete_tasks_host(hostnames=hostnames)
     setup_config_host(hostnames=hostnames)
     # import_data(hostname=hostnames[0])
-    import_ppt_data(ppt='/Users/admin/Downloads/翻译/【EL-国潮】中文版-0428.pptx',hostname=hostnames[0])
+    import_ppt_data(ppt='/Users/admin/Documents/lavector/翻译/【EL-国潮】中文版-0428.pptx',hostname=hostnames[0])
     # get_tasks(hostname='http://127.0.0.1:8080/api/')
     # ptimes1 = ["<:2020-10-01","<:2020-10-08", "<:2020-10-15","<:2020-10-30","<:2020-11-08","<:2020-11-15","<:2020-11-30","<:2020-12-08","<:2020-12-15", "<:2020-12-30", "<:2021-01-08","<:2021-1-15", "<:2021-1-30"]
     # ptimes2 = ["<:2020-09-01","<:2020-09-08", "<:2020-09-15","<:2020-09-20","<:2020-09-25","<:2020-11-11","<:2020-12-11","<:2020-12-25", "<:2021-01-08","<:2021-1-20", "<:2021-1-25"]
