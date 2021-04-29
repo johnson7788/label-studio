@@ -776,11 +776,10 @@ if __name__ == '__main__':
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
-    # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/package/")
-    delete_tasks_host(hostnames=hostnames)
-    setup_config_host(hostnames=hostnames)
+    # delete_tasks_host(hostnames=hostnames)
+    # setup_config_host(hostnames=hostnames)
     # import_data(hostname=hostnames[0])
-    import_ppt_data(ppt='/Users/admin/Documents/lavector/翻译/【EL-国潮】中文版-0428.pptx',hostname=hostnames[0])
+    # import_ppt_data(ppt='/Users/admin/Documents/lavector/翻译/【EL-国潮】中文版-0428.pptx',hostname=hostnames[0])
     # get_tasks(hostname='http://127.0.0.1:8080/api/')
     # ptimes1 = ["<:2020-10-01","<:2020-10-08", "<:2020-10-15","<:2020-10-30","<:2020-11-08","<:2020-11-15","<:2020-11-30","<:2020-12-08","<:2020-12-15", "<:2020-12-30", "<:2021-01-08","<:2021-1-15", "<:2021-1-30"]
     # ptimes2 = ["<:2020-09-01","<:2020-09-08", "<:2020-09-15","<:2020-09-20","<:2020-09-25","<:2020-11-11","<:2020-12-11","<:2020-12-25", "<:2021-01-08","<:2021-1-20", "<:2021-1-25"]
@@ -795,3 +794,4 @@ if __name__ == '__main__':
     # import_excel_data(hostname=hostnames[0])
     # import_pure_data(host=hostnames, wordtype='包装')
     # save_json_toexcel(jsonfile='/opt/lavector/package/192.168.50.139_8081.json')
+    export_data_host(hostnames=hostnames, dirpath="/opt/lavector/translate/")

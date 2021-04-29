@@ -731,10 +731,10 @@ def filter_line(line):
     s = re.sub(rule, '', s)
     return s
 
-def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, keep_data=10000, fitler_requirement=None):
+def import_raw_excel(hostnames, excel, fake_anotate=False, repeat_content=False, keep_data=10000, fitler_requirement=None):
     """
     从excel中读取数据，导出到label-studio中，进行数据标注
-    :param hostname:
+    :param hostnames:
     :param excel: excel的路径
     :param fake_anotate: bool 是否虚拟一个标注结果，如果不是，那么就导入原始数据
     :param repeat_content: bool content是否存在重复，如果存在，需要去重
@@ -1171,8 +1171,13 @@ def import_raw_excel(hostname, excel, fake_anotate=False, repeat_content=False, 
     if keep_data != -1:
         print(f"共收集到有效数据{len(data)}条,需要保留{keep_data}条数据")
         data = data[:keep_data]
-    r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
-    pp.pprint(r.json())
+    every_host_number = int(len(data) / len(hostnames))
+    print(f"每个主机导入数据{every_host_number}")
+    vdatas = [data[i:i + every_host_number] for i in range(0, len(data), every_host_number)]
+    for h, vdata in zip(hostnames, vdatas):
+        r = requests.post(h + "project/import", data=json.dumps(vdata), headers=headers)
+        pp.pprint(r.json())
+        print(f"共导入主机host{h}中数据{len(vdata)}条")
 
 
 def prepare_unique_excel(input_excel, output_excel, limit=10000):
@@ -1237,11 +1242,10 @@ if __name__ == '__main__':
     # train_model()
     # predict_model()
     # hostnames = ["http://192.168.50.139:8084/api/"]
-    hostnames = ["http://192.168.50.139:8080/api/"]
+    # hostnames = ["http://192.168.50.139:8080/api/"]
     # hostnames = ["http://192.168.50.139:8086/api/","http://192.168.50.139:8088/api/"]
-    # hostnames = ["http://192.168.50.139:8081/api/","http://192.168.50.139:8082/api/", "http://192.168.50.139:8083/api/",
-    #              "http://192.168.50.139:8084/api/","http://192.168.50.139:8085/api/","http://192.168.50.139:8086/api/",
-    #              "http://192.168.50.139:8087/api/"]
+    hostnames = ["http://192.168.50.139:8080/api/", "http://192.168.50.139:8081/api/","http://192.168.50.139:8082/api/",
+                 "http://192.168.50.139:8083/api/", "http://192.168.50.139:8084/api/","http://192.168.50.139:8085/api/"]
     # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
@@ -1273,6 +1277,6 @@ if __name__ == '__main__':
     # import_pure_data(host=hostnames, wordtype='包装')
     # save_json_toexcel(jsonfile='/opt/lavector/package/192.168.50.139_8081.json')
     # import_raw_excel(hostname=hostnames[0],excel='/Users/admin/Documents/资生堂产品最后结果/mini_test.xlsx')
-    import_raw_excel(hostname=hostnames[0], excel='/Users/admin/Documents/lavector/relation/data.xlsx',
-                     fake_anotate=False, repeat_content=False, keep_data=-1, fitler_requirement='effect')
+    # import_raw_excel(hostnames=hostnames, excel='/Users/admin/Documents/lavector/relation/data.xlsx',
+    #                  fake_anotate=False, repeat_content=False, keep_data=3000, fitler_requirement='effect')
     # prepare_unique_excel(input_excel='/Users/admin/Documents/资生堂品牌医美项目结果/', output_excel='/Users/admin/Downloads/o1.xlsx')
