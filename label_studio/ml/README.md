@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 概述
 需要启动ML后端和 label_studio的服务端
 
@@ -62,3 +63,10 @@ label-studio/ml/examples/simple_text_classifier.py
 ## 创建自己的ML后端 
 
 Check examples in `label-studio/ml/examples` directory.
+=======
+# Warning
+
+Since v1.0 this folder was moved to another repository Label Studio ML Backend :
+
+https://github.com/heartexlabs/label-studio-ml-backend/tree/master/label_studio_ml
+>>>>>>> upstream/master

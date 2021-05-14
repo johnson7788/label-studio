@@ -2,6 +2,8 @@
 title:
 type: blog
 order: 30
+meta_title: Computer Vision PyTorch Tutorial
+meta_description: Label Studio tutorial for computer vision that showcases transfer learning for images using PyTorch and Label Studio.
 ---
 
 ## Transfer learning for images with PyTorch
@@ -150,7 +152,7 @@ class ImageClassifier(object):
 Finally override API methods
 
 ```python
-from label_studio.ml import LabelStudioMLBase
+from label_studio_ml.model import LabelStudioMLBase
 
 class ImageClassifierAPI(LabelStudioMLBase):
     
