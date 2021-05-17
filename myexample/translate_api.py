@@ -443,6 +443,7 @@ def check_data(hostname):
             repeat_id = not_repeat_id[repeat_idx]
             print(f"发现重复数据:{data['id']}和{repeat_id}")
     print(f"共有重复数据{len(datas) - len(not_repeat_data)}条")
+    return not_repeat_data, not_repeat_id
 
 
 def export_data(hostname=None, dirpath="/opt/lavector/", jsonfile=None, proxy=False):
@@ -723,7 +724,7 @@ def read_all_text(ppt):
 
 def import_ppt_data(ppt,hostname):
     """
-    从ppt中导入数据
+    从ppt中导入数据, 过滤已经导入到label-studio的数据
     :param ppt:
     :type ppt:
     :return:
@@ -733,18 +734,38 @@ def import_ppt_data(ppt,hostname):
     #去重一下数据
     unique_data = []
     texts = read_all_text(ppt)
-    not_repeat_data, not_repeat_id = check_data(hostname)
+    #检查已有数据
+    not_repeat_data, _ = check_data(hostname)
     # 过滤出中文来, 小于5个字符的，也舍弃
     for page, content in texts.items():
         for text in content:
             res = re.findall('[\u4e00-\u9fa5]+', text)
-            if bool(res) and text not in not_repeat_id  and text not in unique_data and len(text) > 5:
+            if bool(res) and text not in not_repeat_data and text not in unique_data and len(text) > 5:
                 data.append({'text': text, 'page': page})
                 unique_data.append(data)
     r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
     print(f"共导入主机host{hostname}中数据{len(data)}条")
 
+
+def import_json_data(hostname):
+    """
+    导入以前导出的json的标注的数据
+    :param hostname:
+    :type hostname:
+    :return:
+    :rtype:
+    """
+    json_dir = '/opt/lavector/translate'
+    json_files = os.listdir(json_dir)
+    data = []
+    for file in json_files:
+        file_path = os.path.join(json_dir,file)
+        with open(file_path, 'r') as f:
+            json_data = json.load(f)
+        data.extend(json_data)
+    r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
+    pp.pprint(r.json())
 
 if __name__ == '__main__':
     # check_data()
@@ -759,12 +780,12 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    hostnames = ["http://192.168.50.139:8084/api/"]
+    # hostnames = ["http://192.168.50.139:8084/api/"]
     # hostnames = ["http://192.168.50.139:8086/api/","http://192.168.50.139:8088/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/","http://192.168.50.139:8082/api/", "http://192.168.50.139:8083/api/",
     #              "http://192.168.50.139:8084/api/","http://192.168.50.139:8085/api/","http://192.168.50.139:8086/api/",
     #              "http://192.168.50.139:8087/api/"]
-    # hostnames = ["http://127.0.0.1:8080/api/"]
+    hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
     # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]
@@ -776,10 +797,9 @@ if __name__ == '__main__':
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
-    # delete_tasks_host(hostnames=hostnames)
-    # setup_config_host(hostnames=hostnames)
+    delete_tasks_host(hostnames=hostnames)
+    setup_config_host(hostnames=hostnames)
     # import_data(hostname=hostnames[0])
-    # import_ppt_data(ppt='/Users/admin/Documents/lavector/翻译/【EL-国潮】中文版-0428.pptx',hostname=hostnames[0])
     # get_tasks(hostname='http://127.0.0.1:8080/api/')
     # ptimes1 = ["<:2020-10-01","<:2020-10-08", "<:2020-10-15","<:2020-10-30","<:2020-11-08","<:2020-11-15","<:2020-11-30","<:2020-12-08","<:2020-12-15", "<:2020-12-30", "<:2021-01-08","<:2021-1-15", "<:2021-1-30"]
     # ptimes2 = ["<:2020-09-01","<:2020-09-08", "<:2020-09-15","<:2020-09-20","<:2020-09-25","<:2020-11-11","<:2020-12-11","<:2020-12-25", "<:2021-01-08","<:2021-1-20", "<:2021-1-25"]
@@ -794,4 +814,7 @@ if __name__ == '__main__':
     # import_excel_data(hostname=hostnames[0])
     # import_pure_data(host=hostnames, wordtype='包装')
     # save_json_toexcel(jsonfile='/opt/lavector/package/192.168.50.139_8081.json')
-    export_data_host(hostnames=hostnames, dirpath="/opt/lavector/translate/")
+    # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/translate/")
+    import_json_data(hostname=hostnames[0])
+    import_ppt_data(ppt='/Users/admin/Documents/lavector/翻译/【EL-国潮】中文版-0428.pptx',hostname=hostnames[0])
+    import_ppt_data(ppt='/Users/admin/Documents/lavector/翻译/【EL香氛】报告-V4.0-0428.pptx',hostname=hostnames[0])
