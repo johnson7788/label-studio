@@ -413,17 +413,20 @@ def import_absa_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
         print(f"共导入主机host{h}中数据{len(vdata)}条")
 
 
-def import_absa_data_host_first(channel=['jd', 'tmall'],leibie_num=[100, 100, 100, 100, 100], require_tags=["component","effect","fragrance","pack","skin"], number=10, hostname=None, mirror=False, unique_type=1, ptime_keyword="=:2021-01-12", table="da_wide_table_before_new"):
+def import_absa_data_host_first(channel=['jd', 'tmall'],leibie_num=[100, 100, 100, 100, 100,100,100,100], require_tags=["component","effect","fragrance","pack","skin","promotion","service","price"], number=500, hostname=None, mirror=False, unique_type=1, ptime_keyword="=:2021-01-12", table="da_wide_table_before"):
     """
     按比例导入不同的host, 导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     12月份，功效4000条，其它维度各1500条
+    :param channel: 每个channel，都进行相同的搜索
+    :param leibie_num: 每个类别的数量
     :param number: 搜索时的Limit的数量，不是最终的数量， 最终的数量由leibie_num确定
-    :param require_tags: 需要哪些维度的语料
+    :param require_tags: 需要哪些维度的语料, eg: ["component", "effect"]
     :param hostname:平均导入每个host中,列表或None
     :param mirror: 给所有host导入一样的数据, 否则每个host平分所有数据
     :return:
     """
-    leibie = ['成分', '功效', '香味', '包装', '肤感']
+    # 对应着require_tags的中文名字
+    leibie = ['成分', '功效', '香味', '包装', '肤感','促销','服务','价格']
     # leibie_num = [100, 100, 100, 100, 100]
     # leibie_num = [-1, -1, -1, -1, 200]
     # leibie_num = [2,4,2,2,2]
@@ -442,7 +445,7 @@ def import_absa_data_host_first(channel=['jd', 'tmall'],leibie_num=[100, 100, 10
     # 开始从hive数据库拉数据, 如果unique_type设置为2，那么数据可能过少
     data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=unique_type, ptime_keyword=ptime_keyword, table=table)
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
-    initial_count = [0, 0, 0, 0, 0]
+    initial_count = [0, 0, 0, 0, 0, 0, 0, 0]
     for one_data in data:
         get_index = leibie.index(one_data['wordtype'])
         if initial_count[get_index] < leibie_num[get_index]:
@@ -744,7 +747,6 @@ def import_excel_data(hostname):
     r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
 
-
 if __name__ == '__main__':
     # check_data()
     # setup_config(hostname=host)
@@ -775,10 +777,10 @@ if __name__ == '__main__':
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
-    # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/absa/")
+    export_data_host(hostnames=hostnames, dirpath="/opt/lavector/absa/", jsonfile='xx.json')
     # delete_tasks_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=None,require_tags=["effect","skin"],number=800, hostname=hostnames, mirror=True)
-    # import_absa_data_host_first(channel=['redbook'],leibie_num=[80, 80, 80, 80, 80],require_tags=None,number=700, hostname=hostnames, mirror=False, ptime_keyword=">:2021-01-18")
+    # import_absa_data_host_first(channel=['jd'],leibie_num=[0, 0, 0, 200, 0],require_tags=["pack"],number=700, hostname=hostnames, mirror=False, ptime_keyword=">:2021-04-05")
     # import_dev_data(hostname=hostnames[0])
-    import_excel_per_data(hostname=hostnames[0])
+    # import_excel_per_data(hostname=hostnames[0])
     # get_tasks(hostname=hostnames[0], taskid=1292)
