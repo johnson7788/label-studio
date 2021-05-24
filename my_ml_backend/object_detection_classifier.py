@@ -28,10 +28,8 @@ class YOLODetection(LabelStudioMLBase):
         """
         super(YOLODetection, self).__init__(**kwargs)
         #训练功能暂未实现
-        # self.train_url = "http://192.168.50.139:5000/api/train_truncate"
         self.train_url = "http://127.0.0.1:5000/api/train"
-        # self.predict_url = "http://192.168.50.139:5000/api/predict_truncate"
-        self.predict_url = "http://127.0.0.1:5000/api/predict"
+        # self.predict_url = "http://127.0.0.1:5000/api/predict"
         #图片的临时保存路径
         self.save_dir = '/tmp'
         self.from_name, self.to_name, self.value, self.labels_in_config = get_single_tag_keys(
@@ -42,7 +40,12 @@ class YOLODetection(LabelStudioMLBase):
 
         # eg: {'表格': {'value': '表格', 'background': 'green'}, '图像': {'value': '图像', 'background': 'blue'}, '公式': {'value': '公式', 'background': 'red'}}
         self.labels_attrs = schema.get('labels_attrs')
-
+        if self.labels_in_config == {'段落', '标题'}:
+            self.predict_url = "http://127.0.0.1:5001/api/predict"
+        elif self.labels_in_config == {'段落'}:
+            self.predict_url = "http://127.0.0.1:5001/api/predict"
+        else:
+            self.predict_url = "http://127.0.0.1:5000/api/predict"
     def download_file(sefl, url, save_dir):
         """
         我们返回绝对路径
@@ -84,7 +87,7 @@ class YOLODetection(LabelStudioMLBase):
         os.remove(image_local_path)
         for res in model_results:
             # 每张图片, 这里是一张图片, res包含4个元素，每个元素的内容如下, 循环每个bboxes
-            images, bboxes, confidences, labels = res
+            images, bboxes, confidences, labels, image_size = res
             for bbox, score, output_label in zip(bboxes, confidences, labels):
                 # 这里处理每个bbox， 一个bbox对应的标签，
                 if output_label not in self.labels_in_config:
