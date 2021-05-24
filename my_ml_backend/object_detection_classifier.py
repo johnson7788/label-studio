@@ -41,9 +41,11 @@ class YOLODetection(LabelStudioMLBase):
         # eg: {'表格': {'value': '表格', 'background': 'green'}, '图像': {'value': '图像', 'background': 'blue'}, '公式': {'value': '公式', 'background': 'red'}}
         self.labels_attrs = schema.get('labels_attrs')
         if self.labels_in_config == {'段落', '标题'}:
-            self.predict_url = "http://127.0.0.1:5001/api/predict"
+            self.predict_url = "http://127.0.0.1:5002/api/predict"
         elif self.labels_in_config == {'段落'}:
             self.predict_url = "http://127.0.0.1:5001/api/predict"
+        elif self.labels_in_config == {'算法'}:
+            self.predict_url = "http://127.0.0.1:5003/api/predict"
         else:
             self.predict_url = "http://127.0.0.1:5000/api/predict"
     def download_file(sefl, url, save_dir):
