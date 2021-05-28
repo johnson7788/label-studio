@@ -4,7 +4,7 @@
 # @File  : use_api.py
 # @Author: johnson
 # @Contact : github: johnson7788
-# @Desc  :  比较复杂的ABSA，根据关键字进行情感分类的api
+# @Desc  :  句子级情感
 # 初始化项目的方法 :  label_studio/server.py start labeling_project --template text_classification --init --force --debug -b
 # 启动项目: label_studio/server.py start labeling_project --debug
 
@@ -33,8 +33,7 @@ def setup_config(hostname=None):
 """
 <View>
   <View style="flex: 30%; color:red">
-    <Header value="$wordtype" />
-    <Text name="keyword" value="$keyword"/>
+    <Header value="$channel" />
   </View>
   <View style="flex: 30%">
       <Labels name="label" toName="text">
@@ -209,7 +208,7 @@ def delete_completions():
 
 def import_data():
     """
-    导入字典里面包含多个key和value的格式
+    句子级情感，只需channel和text
     例如
     data = [{"text": "很好，实惠方便，会推荐朋友", "channel":"jd", "keyword":""},{"text": "一直买的他家这款洗发膏，用的挺好的，洗的干净也没有头皮屑"}]
     :return:
@@ -413,7 +412,7 @@ def import_absa_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
         print(f"共导入主机host{h}中数据{len(vdata)}条")
 
 
-def import_absa_data_host_first(channel=['jd', 'tmall'],channel_num=[6,6,6,6,6], leibie_num=[100, 100, 100, 100, 100,100,100,100], require_tags=["component","effect","fragrance","pack","skin","promotion","service","price"],num_by_channel=False, number=30, hostname=None, mirror=False, unique_type=1, ptime_keyword="=:2021-01-12", table="da_wide_table_before"):
+def import_sentence_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40], number=30, hostname=None, mirror=False, unique_type=1, ptime_keyword="=:2021-01-12", table="da_wide_table_before"):
     """
     按比例导入不同的host, 导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     12月份，功效4000条，其它维度各1500条
@@ -426,11 +425,7 @@ def import_absa_data_host_first(channel=['jd', 'tmall'],channel_num=[6,6,6,6,6],
     :param mirror: 给所有host导入一样的数据, 否则每个host平分所有数据
     :return:
     """
-    # 对应着require_tags的中文名字
-    leibie = ['成分', '功效', '香味', '包装', '肤感','促销','服务','价格']
-    # leibie_num = [100, 100, 100, 100, 100]
-    # leibie_num = [-1, -1, -1, -1, 200]
-    # leibie_num = [2,4,2,2,2]
+    # channel = ["jd","weibo","redbook","tiktok","tmall"]
     from read_hive import get_absa_corpus, query_data_from_db
     # 要导入的数据
     valid_data = []
@@ -444,17 +439,18 @@ def import_absa_data_host_first(channel=['jd', 'tmall'],channel_num=[6,6,6,6,6],
         imported_data.extend(host_imported_data['tasks'])
     imported_data_md5 = get_imported_data_md5(imported_data)
     # 开始从hive数据库拉数据, 如果unique_type设置为2，那么数据可能过少
-    # data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=unique_type, ptime_keyword=ptime_keyword, table=table)
-    data = query_data_from_db(channel=channel,channel_num=channel_num,leibie_num=leibie_num, require_tags=require_tags, num_by_channel=num_by_channel, unique_type=unique_type, ptime_keyword=ptime_keyword, table=table, add_search_num=number)
+    data = get_absa_corpus(channel=channel, number=number, unique_type=unique_type, ptime_keyword=ptime_keyword, table=table)
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉, 不需要initial_count进行二次类别检查了
-    # initial_count = [0, 0, 0, 0, 0, 0, 0, 0]
+    initial_count = [0, 0, 0, 0, 0, 0, 0, 0]
     for one_data in data:
-        # get_index = leibie.index(one_data['wordtype'])
-        # if initial_count[get_index] < leibie_num[get_index]:
-        #     initial_count[get_index] += 1
-        # else:
-        #     continue
-        content = one_data['keyword'] + one_data['text']
+        get_index = channel.index(one_data['channel'])
+        if initial_count[get_index] < channel_num[get_index]:
+            initial_count[get_index] += 1
+        else:
+            continue
+        one_data.pop('keyword')
+        one_data.pop('wordtype')
+        content = one_data['text']
         data_md5 = cal_md5(content)
         if data_md5 in imported_data_md5:
             # 数据已经导入到label-studio过了，不需要重新导入
@@ -776,7 +772,7 @@ if __name__ == '__main__':
     #              "http://192.168.50.119:8089/api/"]
     delete_tasks_host(hostnames=hostnames)
     setup_config_host(hostnames=hostnames)
-    import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40],leibie_num=[5, 5, 5, 5, 5, 5, 5, 5], number=100, hostname=hostnames, num_by_channel=True)
+    import_sentence_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40],number=50, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
