@@ -35,13 +35,13 @@ def setup_config(hostname=None):
   <View style="flex: 30%; color:red">
     <Header value="$channel" />
   </View>
+  <Text name="my_text" value="$text"></Text>
   <View style="flex: 30%">
-      <Labels name="label" toName="text">
-        <Label value="积极" background="red"></Label>
-        <Label value="消极" background="darkorange"></Label>
-        <Label value="中性" background="green"></Label>
-      </Labels>
-      <Text name="text" value="$text"></Text>
+  <Choices name="sentiment" toName="my_text" choice="single" showInLine="true">
+    <Choice value="积极" background="red"/>
+    <Choice value="消极" background="darkorange"/>
+    <Choice value="中性" background="green"/>
+  </Choices>
   </View>
 </View>
 """}
@@ -761,8 +761,8 @@ if __name__ == '__main__':
     # predict_model()
     # hostnames = ["http://192.168.50.139:8087/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/", "http://192.168.50.139:8085/api/"]
-    hostnames = ["http://192.168.50.139:8085/api/"]
-    # hostnames = ["http://127.0.0.1:8080/api/"]
+    # hostnames = ["http://192.168.50.139:8085/api/"]
+    hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
     # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]

@@ -29,9 +29,9 @@ class SentenceClassifier(LabelStudioMLBase):
         assert len(self.parsed_label_config) == 1
         self.from_name, self.info = list(self.parsed_label_config.items())[0]
         # 分类的方式，验证标签的方式
-        # assert self.info['type'] == 'Choices'
+        assert self.info['type'] == 'Choices'
         # ner的方式，验证标签的方式
-        assert self.info['type'] == 'Labels'
+        # assert self.info['type'] == 'Labels'
 
         # 模型的输入, 校验
         assert len(self.info['to_name']) == 1
@@ -82,16 +82,14 @@ class SentenceClassifier(LabelStudioMLBase):
         result = []
         for one_res in results:
             # eg: one_res: ['中性', 0.9977113604545593, ['宝一个人也能轻松清洗非常容易冲洗，不残留强健发质，滋养护发，柔顺易打理花王儿童护发素 180g花王Mer', '滋养'], [403, 405]]
-            predicted_label, predict_score, resdata, locations = one_res
+            predicted_label, predict_score, resdata = one_res
             # 预测的label, eg: '中性'
             # 这个result要和completions标注完成的格式一样
             res = {
                 'from_name': self.from_name,
                 'to_name': self.to_name,
-                'type': 'labels',
-                'value': {'labels': [predicted_label],
-                          'text': resdata[1],
-                          }
+                'type': 'choices',
+                'value': {'choices': [predicted_label]}
             }
             result.append(res)
 
