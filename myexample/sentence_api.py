@@ -761,8 +761,8 @@ if __name__ == '__main__':
     # predict_model()
     # hostnames = ["http://192.168.50.139:8087/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/", "http://192.168.50.139:8085/api/"]
-    # hostnames = ["http://192.168.50.139:8085/api/"]
-    hostnames = ["http://127.0.0.1:8080/api/"]
+    hostnames = ["http://192.168.50.139:8085/api/"]
+    # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
     # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]
@@ -772,7 +772,7 @@ if __name__ == '__main__':
     #              "http://192.168.50.119:8089/api/"]
     delete_tasks_host(hostnames=hostnames)
     setup_config_host(hostnames=hostnames)
-    import_sentence_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40],number=50, hostname=hostnames)
+    import_sentence_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[100,0,0,0,100],number=50, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
