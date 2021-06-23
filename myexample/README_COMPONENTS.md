@@ -1,3 +1,5 @@
+# 适用于所有维度的单独设置
+
 # 使用示例
 所有 label_studio/server.py 都等价于 label-studio命令
 

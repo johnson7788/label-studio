@@ -18,9 +18,9 @@ class ComponentsTextClassifier(LabelStudioMLBase):
         # don't forget to initialize base class...
         super(ComponentsTextClassifier, self).__init__(**kwargs)
 
-        self.train_url = "http://192.168.50.139:5015/api/train_truncate"
+        self.train_url = "http://192.168.50.189:5015/api/train_truncate"
         # self.train_url = "http://127.0.0.1:5000/api/train_truncate"
-        self.predict_url = "http://192.168.50.139:5015/api/predict_truncate"
+        self.predict_url = "http://192.168.50.189:5015/api/predict_truncate"
         # self.predict_url = "http://127.0.0.1:5000/api/predict_truncate"
 
         # 然后从配置中收集所有key，这些key将用于从任务中提取数据并形成预测
@@ -69,11 +69,14 @@ class ComponentsTextClassifier(LabelStudioMLBase):
         """
         #预测数据格式是[(sentence, apspect_keyword),....]
         data = []
+        # 判断词是什么词，是包装还是香味，成分，功效等
+        type = None
         for task in tasks:
             one_data = (task['data'][self.value], task['data']['keyword'])
             data.append(one_data)
+            type = task['data']['wordtype']
         print(f"开始预测模型: 数据量{len(data)}")
-        data = {'data': data}
+        data = {'data': data, 'type': type}
         headers = {'content-type': 'application/json'}
         r = requests.post(self.predict_url, headers=headers, data=json.dumps(data), timeout=600)
         results = r.json()

@@ -413,7 +413,7 @@ def import_absa_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
         print(f"共导入主机host{h}中数据{len(vdata)}条")
 
 
-def import_absa_data_host_first(channel=['jd', 'tmall'],channel_num=[6,6,6,6,6], leibie_num=[100, 100, 100, 100, 100,100,100,100], require_tags=["component","effect","fragrance","pack","skin","promotion","service","price"],num_by_channel=False, number=30, hostname=None, mirror=False, unique_type=1, ptime_keyword="=:2021-01-12", table="da_wide_table_before"):
+def import_absa_data_host_first(channel=['jd', 'tmall'],channel_num=[6,6,6,6,6], leibie_num=[100, 100, 100, 100, 100,100,100,100], require_tags=["component","effect","fragrance","pack","skin","promotion","service","price"],num_by_channel=False, number=30, hostname=None, mirror=False, unique_type=1, ptime_keyword=">:2021-01-12", table="da_wide_table_before",keyword_threhold=20):
     """
     按比例导入不同的host, 导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     12月份，功效4000条，其它维度各1500条
@@ -448,6 +448,8 @@ def import_absa_data_host_first(channel=['jd', 'tmall'],channel_num=[6,6,6,6,6],
     data = query_data_from_db(channel=channel,channel_num=channel_num,leibie_num=leibie_num, require_tags=require_tags, num_by_channel=num_by_channel, unique_type=unique_type, ptime_keyword=ptime_keyword, table=table, add_search_num=number)
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉, 不需要initial_count进行二次类别检查了
     # initial_count = [0, 0, 0, 0, 0, 0, 0, 0]
+    # keywords的unique记录
+    keywords_dict = {}
     for one_data in data:
         # get_index = leibie.index(one_data['wordtype'])
         # if initial_count[get_index] < leibie_num[get_index]:
@@ -459,11 +461,19 @@ def import_absa_data_host_first(channel=['jd', 'tmall'],channel_num=[6,6,6,6,6],
         if data_md5 in imported_data_md5:
             # 数据已经导入到label-studio过了，不需要重新导入
             continue
+        keyword_num = keywords_dict.get(one_data['keyword'], 0)
+        if keyword_threhold !=0 and keyword_num > keyword_threhold:
+            #这个keyword出现的次数已经超过所需要阈值，可以过滤掉, 加到数据库中，统计下
+            keywords_dict[one_data['keyword']] = keyword_num + 1
+            continue
         else:
-            # 没有导入过label-studio，那么加入到valid_data，进行导入
-            # 设置md5字段，方便以后获取
-            one_data['md5'] = data_md5
-            valid_data.append(one_data)
+            # 把keywords中的这个关键字的数量+1
+            keywords_dict[one_data['keyword']] = keyword_num + 1
+        # 没有导入过label-studio，那么加入到valid_data，进行导入
+        # 设置md5字段，方便以后获取
+        one_data['md5'] = data_md5
+        valid_data.append(one_data)
+    print(f'关键字出现的总的次数：{keywords_dict}')
     print(f"可导入的有效数据是{len(valid_data)}, 有重复数据或不需要数据{len(data) - len(valid_data)} 是无需导入的")
     if not valid_data:
         # 如果都是已经导入过的数据，直接放弃导入
@@ -528,6 +538,8 @@ def export_data(hostname=None, dirpath="/opt/lavector/", jsonfile=None, proxy=Fa
         local_jsonfile = os.path.join(dirpath, local_jsonfile)
     else:
         local_jsonfile = os.path.join(dirpath, jsonfile)
+    if os.path.exists(local_jsonfile):
+        print(f"注意，json文件已经存在即将覆盖json文件 {local_jsonfile}")
     if proxy:
         with requests.get(url, stream=True,
                           proxies=dict(http='socks5://127.0.0.1:9080', https='socks5://127.0.0.1:9080')) as r:
@@ -765,7 +777,7 @@ if __name__ == '__main__':
     # predict_model()
     # hostnames = ["http://192.168.50.139:8087/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/", "http://192.168.50.139:8085/api/"]
-    hostnames = ["http://192.168.50.139:8085/api/"]
+    hostnames = ["http://192.168.50.139:8081/api/"]
     # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
@@ -774,14 +786,15 @@ if __name__ == '__main__':
     #              "http://192.168.50.119:8083/api/", "http://192.168.50.119:8084/api/","http://192.168.50.119:8085/api/",
     #              "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
     #              "http://192.168.50.119:8089/api/"]
-    delete_tasks_host(hostnames=hostnames)
-    setup_config_host(hostnames=hostnames)
-    import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40],leibie_num=[5, 5, 5, 5, 5, 5, 5, 5], number=100, hostname=hostnames, num_by_channel=True)
+    # delete_tasks_host(hostnames=hostnames)
+    # setup_config_host(hostnames=hostnames)
+    # import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40],leibie_num=[5, 5, 5, 5, 5, 5, 5, 5], number=100, hostname=hostnames, num_by_channel=True)
+    # import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40],leibie_num=[0, 0, 0, 0, 0,40,0,0], number=200, hostname=hostnames, num_by_channel=True)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
-    # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/absa/", jsonfile='xx.json')
-    # import_absa_data_host_first(channel=None,require_tags=["effect","skin"],number=800, hostname=hostnames, mirror=True)
+    # export_data(hostname=hostnames[0], dirpath="/opt/lavector/absa/", jsonfile='8081-0618-200.json')
+    import_absa_data_host_first(channel=None,require_tags=["effect","skin"],number=800, hostname=hostnames, mirror=True)
     # import_absa_data_host_first(channel=['jd'],leibie_num=[0, 0, 0, 200, 0],require_tags=["pack"],number=700, hostname=hostnames, mirror=False, ptime_keyword=">:2021-04-05")
     # import_dev_data(hostname=hostnames[0])
     # import_excel_per_data(hostname=hostnames[0])

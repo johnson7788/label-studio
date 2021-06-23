@@ -366,7 +366,7 @@ def import_com_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
         print(f"共导入主机host{h}中数据{len(vdata)}条")
 
 
-def import_com_data_host_first(channel=['jd', 'tmall'], keyword_threhold=0, leibie_num=[1000, -1, -1, -1, -1], require_tags=["component","effect","fragrance","pack","skin"], number=10, unique_type=1, hostname=None, ptime_keyword=">:2020-12-01", not_cache=True, table="da_wide_table_new"):
+def import_absa_data_host_first(channel=['jd', 'tmall'],channel_num=[6,6,6,6,6], leibie_num=[100, 100, 100, 100, 100,100,100,100], require_tags=["component","effect","fragrance","pack","skin","promotion","service","price"],num_by_channel=False, number=30, hostname=None, mirror=False, unique_type=1, ptime_keyword=">:2021-01-12", table="da_wide_table_before",keyword_threhold=20):
     """
     按比例导入不同的host, 导入成分分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     12月份，功效4000条，其它维度各1500条
@@ -375,20 +375,11 @@ def import_com_data_host_first(channel=['jd', 'tmall'], keyword_threhold=0, leib
     :param number: 从数据库检索的条目，不是最终数目，最终数目根据leibie_num确定
     :param require_tags: 需要哪些维度的语料
     :param hostname:平均导入每个host中,列表或None
-    :return:
+    :return: 这个主机上现有的数据条数 int
     """
-    from math_tags import get_emotional_words
-    confirm_file = "com_100.txt"
-    all_tags = []
-    #收集所有tags
-    with open(confirm_file, 'r') as f:
-        for line in f:
-            line = line.strip()
-            tmp = {}
-            tmp['0'] = line.split('|')
-            all_tags.append(str(tmp))
-    leibie = ['成分', '功效', '香味', '包装', '肤感']
-    from read_hive import get_absa_corpus
+    # 对应着require_tags的中文名字
+    leibie = ['成分', '功效', '香味', '包装', '肤感','促销','服务','价格']
+    from read_hive import get_absa_corpus, query_data_from_db
     # 要导入的数据
     valid_data = []
     # 已经导入的数据, 注意更改获取的样本数目，默认是5000条
@@ -401,43 +392,35 @@ def import_com_data_host_first(channel=['jd', 'tmall'], keyword_threhold=0, leib
         imported_data.extend(host_imported_data['tasks'])
     imported_data_md5 = get_imported_data_md5(imported_data)
     # 开始从hive数据库拉数据, 如果unique_type设置为2，那么数据可能过少
-    data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=unique_type, ptime_keyword=ptime_keyword, not_cache=not_cache, table=table)
-    # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
-    initial_count = [0, 0, 0, 0, 0]
-    #keywords的unique记录
+    # data = get_absa_corpus(channel=channel, requiretags=require_tags, number=number, unique_type=unique_type, ptime_keyword=ptime_keyword, table=table)
+    data = query_data_from_db(channel=channel,channel_num=channel_num,leibie_num=leibie_num, require_tags=require_tags, num_by_channel=num_by_channel, unique_type=unique_type, ptime_keyword=ptime_keyword, table=table, add_search_num=number)
+    # 获取到的data数据进行排查，如果已经导入过了，就过滤掉, 不需要initial_count进行二次类别检查了
+    # initial_count = [0, 0, 0, 0, 0, 0, 0, 0]
+    # keywords的unique记录
     keywords_dict = {}
     for one_data in data:
-        get_index = leibie.index(one_data['wordtype'])
-        if initial_count[get_index] < leibie_num[get_index]:
-            initial_count[get_index] += 1
-        else:
-            continue
+        # get_index = leibie.index(one_data['wordtype'])
+        # if initial_count[get_index] < leibie_num[get_index]:
+        #     initial_count[get_index] += 1
+        # else:
+        #     continue
         content = one_data['keyword'] + one_data['text']
         data_md5 = cal_md5(content)
-        #用于匹配当前这个数据的关键字是否和我们提供的100%确定是成分的关键字匹配
-        match_keywords = []
-        #已经获取了多少个这个关键字的示例, 如果不存在，那么为0
-        keyword_num = keywords_dict.get(one_data['keyword'], 0)
-        for current_tags in all_tags:
-            keywords, keyword_dictid = get_emotional_words(tag_words=current_tags, content=content)
-            match_keywords.extend(keywords)
         if data_md5 in imported_data_md5:
             # 数据已经导入到label-studio过了，不需要重新导入
             continue
-        if one_data['keyword'] in match_keywords:
-            print(f'这个句子的关键字: {one_data["keyword"]} 在白名单中出现，跳过，句子是: {one_data["text"]}')
-            continue
-        elif keyword_threhold !=0 and keyword_num > keyword_threhold:
+        keyword_num = keywords_dict.get(one_data['keyword'], 0)
+        if keyword_threhold !=0 and keyword_num > keyword_threhold:
             #这个keyword出现的次数已经超过所需要阈值，可以过滤掉, 加到数据库中，统计下
             keywords_dict[one_data['keyword']] = keyword_num + 1
             continue
         else:
-            # 没有导入过label-studio，那么加入到valid_data，进行导入
-            # 设置md5字段，方便以后获取
             # 把keywords中的这个关键字的数量+1
             keywords_dict[one_data['keyword']] = keyword_num + 1
-            one_data['md5'] = data_md5
-            valid_data.append(one_data)
+        # 没有导入过label-studio，那么加入到valid_data，进行导入
+        # 设置md5字段，方便以后获取
+        one_data['md5'] = data_md5
+        valid_data.append(one_data)
     print(f'关键字出现的总的次数：{keywords_dict}')
     print(f"可导入的有效数据是{len(valid_data)}, 有重复数据或不需要数据{len(data) - len(valid_data)} 是无需导入的")
     if not valid_data:
@@ -445,14 +428,22 @@ def import_com_data_host_first(channel=['jd', 'tmall'], keyword_threhold=0, leib
         return
     if len(valid_data) < number:
         print(f"收集的数据量过少，很可能是因为get_absa_corpus的unique type设置问题")
-    every_host_number = int(len(valid_data) / len(host))
-    print(f"每个主机导入数据{every_host_number}")
-    vdatas = [valid_data[i:i + every_host_number] for i in range(0, len(valid_data), every_host_number)]
-    for h, vdata in zip(host, vdatas):
-        r = requests.post(h + "project/import", data=json.dumps(vdata), headers=headers)
-        pp.pprint(r.json())
-        print(f"共导入主机host: {h}中数据{len(vdata)}条")
 
+    if mirror:
+        for h in host:
+            r = requests.post(h + "project/import", data=json.dumps(valid_data), headers=headers)
+            pp.pprint(r.json())
+            print(f"共导入主机host{h}中数据{len(valid_data)}条")
+    else:
+        every_host_number = int(len(valid_data) / len(host))
+        print(f"每个主机导入数据{every_host_number}")
+        vdatas = [valid_data[i:i + every_host_number] for i in range(0, len(valid_data), every_host_number)]
+        for h, vdata in zip(host, vdatas):
+            r = requests.post(h + "project/import", data=json.dumps(vdata), headers=headers)
+            pp.pprint(r.json())
+            print(f"共导入主机host: {h}中数据{len(vdata)}条")
+    total_num = len(imported_data_md5) + len(vdata)
+    return total_num
 
 def check_data():
     """
@@ -708,6 +699,67 @@ def save_json_toexcel(jsonfile):
     save_excel(data=data,output_file='export.xlsx')
 
 
+def import_type_data(channel_num=[600, 600, 600, 600, 600]):
+    """
+    导入某个数据的data
+    :param channel_num:  需要导入的数据的数量
+    :type channel_num:
+    :return:
+    :rtype:
+    """
+    # leibie_num ： [100, 100, 100, 100, 100, 100, 100, 100]
+    # leibie = ['成分', '功效', '香味', '包装', '肤感', '促销', '服务', '价格']
+    total_num = sum(channel_num)
+    type_config = [
+        {
+          'host': "http://192.168.50.139:7081/api/",
+            'leibie_num': [0, 600, 0, 0, 0,0,0,0],
+            'require_tags': ["effect"]
+        },
+        {
+            'host': "http://192.168.50.139:7082/api/",
+            'leibie_num': [0, 0, 0, 600, 0, 0, 0, 0],
+            'require_tags': ["pack"]
+        },
+        {
+            'host': "http://192.168.50.139:7083/api/",
+            'leibie_num': [0, 0, 600, 0, 0, 0, 0, 0],
+            'require_tags': ["fragrance"]
+        },
+        {
+            'host': "http://192.168.50.139:7084/api/",
+            'leibie_num': [0, 0, 0, 0, 0, 600, 0, 0],
+            'require_tags': ["promotion"]
+        },
+    ]
+    for conf in type_config:
+        thishost = conf['host']
+        leibie_num_init = conf['leibie_num']
+        require_tags = conf['require_tags']
+        delete_tasks_host(hostnames=[thishost])
+        setup_config_host(hostnames=[thishost])
+        ptimes_list = [">:2021-05-20", ">:2021-04-20", ">:2021-03-20", ">:2021-02-20", ">:2021-01-20"]
+        iter_num = len(ptimes_list)
+        start_iter = 0
+        start_num = 0
+        # 继续导入，直到导入的数量没问题了, 只是修改日期
+        while start_num < total_num and start_iter < iter_num:
+            should_num = total_num - start_num
+            should_import_num = int(should_num/len(channel_num))
+            should_import_num = 1 if should_import_num == 0 else should_import_num
+            should_channel_num = [should_import_num] * len(channel_num)
+            ptimes_keyword =ptimes_list[start_iter]
+            # 更改下leibie_num，每个channel搜到的类别数量等于所有类别之和才可以
+            leibie_num = [i if i ==0 else should_import_num for i in leibie_num_init]
+            import_num = import_absa_data_host_first(channel=["jd", "weibo", "redbook", "tiktok", "tmall"],
+                                        channel_num=should_channel_num, leibie_num=leibie_num,
+                                        require_tags=require_tags, number=1000, hostname=[thishost], num_by_channel=True,
+                                        ptime_keyword=ptimes_keyword, table="da_wide_table_before", keyword_threhold=30)
+            start_iter += 1
+            start_num = import_num
+
+
+
 if __name__ == '__main__':
     # check_data()
     # setup_config(hostname=host)
@@ -721,7 +773,7 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    hostnames = ["http://192.168.50.139:8086/api/"]
+    hostnames = ["http://192.168.50.139:7080/api/"]
     # hostnames = ["http://192.168.50.139:8086/api/","http://192.168.50.139:8088/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/","http://192.168.50.139:8082/api/", "http://192.168.50.139:8083/api/",
     #              "http://192.168.50.139:8084/api/","http://192.168.50.139:8085/api/","http://192.168.50.139:8086/api/",
@@ -739,8 +791,8 @@ if __name__ == '__main__':
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/package/")
-    delete_tasks_host(hostnames=hostnames)
-    setup_config_host(hostnames=hostnames)
+    # delete_tasks_host(hostnames=hostnames)
+    # setup_config_host(hostnames=hostnames)
     # get_tasks(hostname='http://127.0.0.1:8080/api/')
     # ptimes1 = ["<:2020-10-01","<:2020-10-08", "<:2020-10-15","<:2020-10-30","<:2020-11-08","<:2020-11-15","<:2020-11-30","<:2020-12-08","<:2020-12-15", "<:2020-12-30", "<:2021-01-08","<:2021-1-15", "<:2021-1-30"]
     # ptimes2 = ["<:2020-09-01","<:2020-09-08", "<:2020-09-15","<:2020-09-20","<:2020-09-25","<:2020-11-11","<:2020-12-11","<:2020-12-25", "<:2021-01-08","<:2021-1-20", "<:2021-1-25"]
@@ -751,9 +803,11 @@ if __name__ == '__main__':
     #     print(ptime)
     #     import_com_data_host_first(channel=None,keyword_threhold=0,ptime_keyword=ptime, leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=1000, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_new")
     # import_com_data_host_first(channel=None,keyword_threhold=20,ptime_keyword=">:2020-1-20", leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=5000, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_new")
-    import_com_data_host_first(channel=None,keyword_threhold=20,ptime_keyword=">:2020-3-20", leibie_num=[200, -1, -1, -1, -1], require_tags=['component'], number=400, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_before")
+    # import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[600,600,600,600,600],leibie_num=[0, 600, 0, 0, 0,0,0,0], require_tags=["effect"],number=1000, hostname=hostnames, num_by_channel=True, ptime_keyword=">:2021-05-20", table="da_wide_table_before",keyword_threhold=30)
+    # import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40],leibie_num=[5, 5, 5, 5, 5, 5, 5, 5], number=100, hostname=hostnames, num_by_channel=True)
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
     # import_data(hostname=hostnames[0])
     # import_pure_data(host=hostnames, wordtype='包装')
     # save_json_toexcel(jsonfile='/opt/lavector/package/192.168.50.139_8081.json')
+    import_type_data()
