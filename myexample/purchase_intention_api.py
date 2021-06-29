@@ -4,21 +4,12 @@
 # @File  : use_api.py
 # @Author: johnson
 # @Contact : github: johnson7788
-# @Desc  :  成分词判断，是否是成分词，还是成词的干扰词
+# @Desc  :  购买意向的数据提取，并导入标注系统
 """
-channel	content	关键词	判断是否准确	理由
-tmall	有薄荷，抹上凉凉的，没有什么不适	薄荷	准确	说的是成分
-tmall	整体评价：很大一瓶 水的质地比较浓稠 有股那种洗护的味道 刺鼻 不好闻 上脸比较滋润 鼻翼附近会刺痛 一分钱一分货吧 感受不好 不会回购 我一直在用红石榴和微精华水这两款水肤感都很好 推荐购买	红石榴	不准确	红石榴指的是产品
-tmall	发货特别的快，我第1天买的，第2天就到了，迫不及待的打开试用了一下，吸收效果不错的，提亮肤色效果特别好，我的肤质比较偏干，正好适合秋冬季用，只是味道有一点点不太喜欢，自己加了两滴玫瑰精油一起，还挺好的。本来以为送了一盒膜，打开发现是个祝福的相框吧，还挺尴尬的。哈哈???	玫瑰	不准确	说的是精油，并非成分
-tmall	不错，湿敷比擦拭更舒服，冰冰凉凉的有点提神，好闻的薄荷感	薄荷	不准确	说的是使用感受，并非成分
-tmall	买来收敛毛孔的，看着是天猫超市，价格也便宜，标签包装都挺完整的，我都一层一层撕下来了，闻着是橙子和牙膏薄荷的味道。这个的产品有好多假冒的，希望是真的吧！	薄荷	不准确	说的是味道和使用感受，并非成分
-tmall	湿敷的，有薄荷跟橘子的味道，才用，期待以后的效果吧	薄荷	不准确	说的是味道，并非成分
-tmall	这个水可以用来湿敷 虽然用来湿敷有些贵 ！里面含有薄荷，涂上非常舒服，洗面奶面霜也炒鸡适合我 我油皮痘痘肌	薄荷	准确	说的是成分
-redbook	今天分享一下我在夏天非常喜欢用的三款水：1??悦木之源菌菇水真的太太太喜欢啦，非常的清爽，不油腻，上脸吸收速度很快，湿敷对痘痘消肿有不错的效果。常年囤货。2??skii神仙水控油效果非常明显，对油皮和混油皮友好，干皮渗入。除了贵和味道之外，没有别的缺点，有预算的宝宝买就对了。3??城野医生收敛水可以调理你的皮脂分泌，但是没有收缩毛孔和去黑头的功效，使用感很好，清清凉凉的，但其实不添加酒精，而是添加了薄荷醇，肤感和气味都和酒精有点类似，但是很温和，不会造成屏障受损。@生活薯  @薯队长	薄荷	准确	说的是成分
-tmall	用在白泥之后还是很不错的，觉得有二次湿敷出白头，收缩毛孔大概是有的吧	白泥	不准确	说的是产品，并非成分
-weibo	#空瓶记# #空瓶记城野医生的毛孔收敛水 每周毛孔清洁后必备的水儿 配合奥尔滨的化妆棉进行二次清洁 平价好用 推了一万年了 我去日本就背了七八瓶回来颐莲的玻尿酸护发原液 因为我头发经常烫染所以发梢有点受损 每次洗完头发按三泵涂抹 不粘腻及时补水然后再涂抹护发精油锁住水份 颐莲这个牌子是福瑞达旗下的 福瑞达和华西生物都是国内做玻尿酸的大牛 雅诗兰黛的玻尿酸供应商 所以不要瞧不起他们 有这么便宜好用性价比高的国货不支持 还等啥呢 收起全文d	玻尿酸	不准确	说的是产品，并非成分
-"""
+数据的格式, 7分类, 喜欢，研究，想要，购买，复购，粉丝，推荐
+title	content	关键词
 
+"""
 import requests
 import json
 import pprint
@@ -42,13 +33,18 @@ def setup_config(hostname=None):
                 """
 <View>
   <View style="flex: 30%; color:red">
-    <Header value="$wordtype" />
+    <Header value="$title" />
     <Text name="keyword" value="$keyword"/>
   </View>
   <View style="flex: 30%">
       <Labels name="label" toName="text">
-        <Label value="是" background="red"></Label>
-        <Label value="否" background="blue"></Label>
+        <Label value="喜欢" background="red"></Label>
+        <Label value="想要" background="green"></Label>
+        <Label value="研究" background="blue"></Label>
+        <Label value="购买" background="black"></Label>
+        <Label value="复购" background="gold"></Label>
+        <Label value="粉丝" background="pink"></Label>
+        <Label value="推荐" background="orange"></Label>
       </Labels>
       <Text name="text" value="$text"></Text>
   </View>
@@ -187,50 +183,15 @@ def delete_completions():
 
 def import_data(hostname):
     """
-    导入字典里面包含多个key和value的格式
-    例如
-    data = [{"text": "很好，实惠方便，会推荐朋友", "channel":"jd", "keyword":""},{"text": "一直买的他家这款洗发膏，用的挺好的，洗的干净也没有头皮屑"}]
-    channel	content	关键词	判断是否准确	理由
-tmall	有薄荷，抹上凉凉的，没有什么不适	薄荷	准确	说的是成分
-tmall	整体评价：很大一瓶 水的质地比较浓稠 有股那种洗护的味道 刺鼻 不好闻 上脸比较滋润 鼻翼附近会刺痛 一分钱一分货吧 感受不好 不会回购 我一直在用红石榴和微精华水这两款水肤感都很好 推荐购买	红石榴	不准确	红石榴指的是产品
-tmall	发货特别的快，我第1天买的，第2天就到了，迫不及待的打开试用了一下，吸收效果不错的，提亮肤色效果特别好，我的肤质比较偏干，正好适合秋冬季用，只是味道有一点点不太喜欢，自己加了两滴玫瑰精油一起，还挺好的。本来以为送了一盒膜，打开发现是个祝福的相框吧，还挺尴尬的。哈哈???	玫瑰	不准确	说的是精油，并非成分
-tmall	不错，湿敷比擦拭更舒服，冰冰凉凉的有点提神，好闻的薄荷感	薄荷	不准确	说的是使用感受，并非成分
-tmall	买来收敛毛孔的，看着是天猫超市，价格也便宜，标签包装都挺完整的，我都一层一层撕下来了，闻着是橙子和牙膏薄荷的味道。这个的产品有好多假冒的，希望是真的吧！	薄荷	不准确	说的是味道和使用感受，并非成分
-tmall	湿敷的，有薄荷跟橘子的味道，才用，期待以后的效果吧	薄荷	不准确	说的是味道，并非成分
-tmall	这个水可以用来湿敷 虽然用来湿敷有些贵 ！里面含有薄荷，涂上非常舒服，洗面奶面霜也炒鸡适合我 我油皮痘痘肌	薄荷	准确	说的是成分
-redbook	今天分享一下我在夏天非常喜欢用的三款水：1??悦木之源菌菇水真的太太太喜欢啦，非常的清爽，不油腻，上脸吸收速度很快，湿敷对痘痘消肿有不错的效果。常年囤货。2??skii神仙水控油效果非常明显，对油皮和混油皮友好，干皮渗入。除了贵和味道之外，没有别的缺点，有预算的宝宝买就对了。3??城野医生收敛水可以调理你的皮脂分泌，但是没有收缩毛孔和去黑头的功效，使用感很好，清清凉凉的，但其实不添加酒精，而是添加了薄荷醇，肤感和气味都和酒精有点类似，但是很温和，不会造成屏障受损。@生活薯  @薯队长	薄荷	准确	说的是成分
-tmall	用在白泥之后还是很不错的，觉得有二次湿敷出白头，收缩毛孔大概是有的吧	白泥	不准确	说的是产品，并非成分
-weibo	#空瓶记# #空瓶记城野医生的毛孔收敛水 每周毛孔清洁后必备的水儿 配合奥尔滨的化妆棉进行二次清洁 平价好用 推了一万年了 我去日本就背了七八瓶回来颐莲的玻尿酸护发原液 因为我头发经常烫染所以发梢有点受损 每次洗完头发按三泵涂抹 不粘腻及时补水然后再涂抹护发精油锁住水份 颐莲这个牌子是福瑞达旗下的 福瑞达和华西生物都是国内做玻尿酸的大牛 雅诗兰黛的玻尿酸供应商 所以不要瞧不起他们 有这么便宜好用性价比高的国货不支持 还等啥呢 收起全文d	玻尿酸	不准确	说的是产品，并非成分
-
     :return:
     """
-    data = [{'channel': 'jd', 'keyword': '芦荟', 'md5': '503d422e3c12b9bf33d5833a84aea219',
-             'text': '套装设计很贴心，效果是不错的。芦荟镇定效果可以，刺鼻味是有的。操作容易-效果不错。缺点是漂色不到半月，颜色又开始悄咪咪的恢复了，估计2-3周要做一次。仅个人经验。',
-             'wordtype': '成分'},
-            {'channel': 'jd', 'keyword': '海藻', 'md5': 'ec57fe5052e5304e4dccb05f438e3c0b',
-             'text': '孕期的时候就使用它家的海藻面膜，挺好用的',
-             'wordtype': '成分'},
-            {'channel': 'jd', 'keyword': '控油', 'md5': 'f3d1857051db73f637255f0db14686d0',
-             'text': '泡沫数量：666666产品香味：麝香控油效果：#',
-             'wordtype': '功效'},
-            {'channel': 'jd', 'keyword': '麝香', 'md5': 'b1d0dda097bdb011e7cb19887e51c89b',
-             'text': '泡沫数量：666666产品香味：麝香控油效果：#',
-             'wordtype': '成分'}, {'channel': 'jd', 'keyword': '保湿', 'md5': 'f40089e74b1cf93dac1fbb2d1589fb36',
-                                 'text': '这是第三购买了，碰上京东七夕活动也趁机买下，原来虽然还没有用完，因为活动就多囤点，面膜总是要用的反正，一直买的是这个牌子，用起来还是很放心的，没有酒精味，保湿效果很好，就是价钱小贵了些，如果平时再优惠点就更好了，不过这次没有送有点遗憾。',
-                                 'wordtype': '功效'},
-            {'channel': 'jd', 'keyword': '酒精', 'md5': '11187ff91e2cea54bebba96d3b265e92',
-             'text': '这是第三购买了，碰上京东七夕活动也趁机买下，原来虽然还没有用完，因为活动就多囤点，面膜总是要用的反正，一直买的是这个牌子，用起来还是很放心的，没有酒精味，保湿效果很好，就是价钱小贵了些，如果平时再优惠点就更好了，不过这次没有送有点遗憾。',
-             'wordtype': '成分'}, {'channel': 'jd', 'keyword': '没有酒精', 'md5': '83d8fa49556003e9e2662f8f410c7865',
-                                 'text': '这是第三购买了，碰上京东七夕活动也趁机买下，原来虽然还没有用完，因为活动就多囤点，面膜总是要用的反正，一直买的是这个牌子，用起来还是很放心的，没有酒精味，保湿效果很好，就是价钱小贵了些，如果平时再优惠点就更好了，不过这次没有送有点遗憾。',
-                                 'wordtype': '成分'},
-            {'channel': 'jd', 'keyword': '质感', 'md5': 'd1549cc845f00afcb2e200377d296444',
-             'text': '产品质感：打开一股特殊的味道，有点像酒精味，也有点像发酵的味道适合肤质：适合肤质：适合 敏感肌使用补水效果：补水效果不错。贴合效果：面膜大小正好，贴合面部非常好使用感受：总体来说还可以。本人敏感皮肤，用着不错',
-             'wordtype': '功效'}, {'channel': 'jd', 'keyword': '补水', 'md5': 'e09d37df17e5d972d46f57c11950e4e4',
-                                 'text': '产品质感：打开一股特殊的味道，有点像酒精味，也有点像发酵的味道适合肤质：适合肤质：适合 敏感肌使用补水效果：补水效果不错。贴合效果：面膜大小正好，贴合面部非常好使用感受：总体来说还可以。本人敏感皮肤，用着不错',
-                                 'wordtype': '功效'},
-            {'channel': 'jd', 'keyword': '酒精', 'md5': 'cec263f850791af51fc447f701a076e5',
-             'text': '产品质感：打开一股特殊的味道，有点像酒精味，也有点像发酵的味道适合肤质：适合肤质：适合 敏感肌使用补水效果：补水效果不错。贴合效果：面膜大小正好，贴合面部非常好使用感受：总体来说还可以。本人敏感皮肤，用着不错',
-             'wordtype': '成分'}]
+    data = [{'title': '',
+             'text': '还吃瓜呢？还不快来找一款合适自己的男士眼霜？科颜氏男士小冰棒眼霜，专门针对双眼易于疲劳，产生浮肿或者黑眼圈的人群，易于涂抹，轻轻一扫，双眼即被唤醒。放心交友的秘密武器#本人黑眼圈声明#',
+             'keyword': '科颜氏男士小冰棒眼霜'},
+            {'title': '我是标题',
+             'text': '转眼就要过年啦~如果你问我有什么新年愿望~那自然是祈福新的一年红红火火，万事如意~这不~就特应景的入了自然堂X天坛祈福限量版礼盒！喜庆的红色礼盒包装，一收到就有种来年要鸿运当头的feel~礼盒包含了小紫瓶精华、小紫瓶熬夜眼霜、小紫瓶冰肌水和乳液四件套！重点来说下这个小紫瓶精华，真的是我秋冬的熬夜补水救星了~轻薄的质地，上脸意外的滋润，轻拍几下就能吸收~还添加有自然堂独家成分喜马拉雅红球藻，富含天然虾青素，有效对抗自由基，抗氧化的一把好手～4%烟酰胺焕亮肌肤，二裂酵母修护肌底，强强联手的成分，还怕什么熬夜黄！对像我这样长时间熬夜的妹子就比较友好~我差不多用了一周左右，脸上因为干燥形成的起皮都缓解不少，肤色也有所提亮噢！PS：搭配它的熬夜cp小紫瓶熬夜眼霜，修护效果更double！必须把好气色带到新的一年#祈福2021 天坛x自然堂# 收起全文d',
+             'keyword': '小紫瓶熬夜眼霜'},
+            ]
     r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
 
@@ -699,7 +660,7 @@ def save_json_toexcel(jsonfile):
     save_excel(data=data,output_file='export.xlsx')
 
 
-def import_type_data(channel_num=[40, 40, 40, 40, 40]):
+def import_type_data(channel_num=[600, 600, 600, 600, 600]):
     """
     导入某个数据的data
     :param channel_num:  需要导入的数据的数量
@@ -713,22 +674,22 @@ def import_type_data(channel_num=[40, 40, 40, 40, 40]):
     type_config = [
         {
           'host': "http://192.168.50.139:7081/api/",
-            'leibie_num': [0, 40, 0, 0, 0,0,0,0],
+            'leibie_num': [0, 600, 0, 0, 0,0,0,0],
             'require_tags': ["effect"]
         },
         {
             'host': "http://192.168.50.139:7082/api/",
-            'leibie_num': [0, 0, 0, 40, 0, 0, 0, 0],
+            'leibie_num': [0, 0, 0, 600, 0, 0, 0, 0],
             'require_tags': ["pack"]
         },
         {
             'host': "http://192.168.50.139:7083/api/",
-            'leibie_num': [0, 0, 40, 0, 0, 0, 0, 0],
+            'leibie_num': [0, 0, 600, 0, 0, 0, 0, 0],
             'require_tags': ["fragrance"]
         },
         {
             'host': "http://192.168.50.139:7084/api/",
-            'leibie_num': [0, 0, 0, 0, 0, 40, 0, 0],
+            'leibie_num': [0, 0, 0, 0, 0, 600, 0, 0],
             'require_tags': ["promotion"]
         },
     ]
@@ -758,7 +719,48 @@ def import_type_data(channel_num=[40, 40, 40, 40, 40]):
             start_iter += 1
             start_num = import_num
 
-
+def import_raw_excel_data(hostname):
+    """
+    不从数据库中导入数据了，从最原始的excel中导入数据
+    导入3个列， content, title, tag_format_品牌(aspect)
+    :return:
+    """
+    import pandas as pd
+    excel_dir = '/Users/admin/Documents/lavector/购买意向分类/excel_data'
+    excel_list = os.listdir(excel_dir)
+    excel_list_filter = [ex for ex in excel_list if ex.endswith('xlsx') and not ex.startswith('~')]
+    data = []
+    # data = [{'title': '',
+    #          'text': '还吃瓜呢？还不快来找一款合适自己的男士眼霜？科颜氏男士小冰棒眼霜，专门针对双眼易于疲劳，产生浮肿或者黑眼圈的人群，易于涂抹，轻轻一扫，双眼即被唤醒。放心交友的秘密武器#本人黑眼圈声明#',
+    #          'keyword': '科颜氏男士小冰棒眼霜'},
+    #         {'title': '我是标题',
+    #          'text': '转眼就要过年啦~如果你问我有什么新年愿望~那自然是祈福新的一年红红火火，万事如意~这不~就特应景的入了自然堂X天坛祈福限量版礼盒！喜庆的红色礼盒包装，一收到就有种来年要鸿运当头的feel~礼盒包含了小紫瓶精华、小紫瓶熬夜眼霜、小紫瓶冰肌水和乳液四件套！重点来说下这个小紫瓶精华，真的是我秋冬的熬夜补水救星了~轻薄的质地，上脸意外的滋润，轻拍几下就能吸收~还添加有自然堂独家成分喜马拉雅红球藻，富含天然虾青素，有效对抗自由基，抗氧化的一把好手～4%烟酰胺焕亮肌肤，二裂酵母修护肌底，强强联手的成分，还怕什么熬夜黄！对像我这样长时间熬夜的妹子就比较友好~我差不多用了一周左右，脸上因为干燥形成的起皮都缓解不少，肤色也有所提亮噢！PS：搭配它的熬夜cp小紫瓶熬夜眼霜，修护效果更double！必须把好气色带到新的一年#祈福2021 天坛x自然堂# 收起全文d',
+    #          'keyword': '小紫瓶熬夜眼霜'},
+    #         ]
+    for excel_file in excel_list_filter:
+        excel_file_path = os.path.join(excel_dir, excel_file)
+        df = pd.read_excel(excel_file_path)
+        excel_data_count = 0
+        for idx, d in df.iterrows():
+            if d.notnull()['title']:
+                title = ''
+            else:
+                title = d['title']
+            if d.notnull()['content']:
+                continue
+            else:
+                content = d['content']
+            if d.notnull()['tag_format_品牌(aspect)']:
+                continue
+            else:
+                aspect_keword = d['tag_format_品牌(aspect)']
+            one_data = {'title': title, 'content': content, 'keyword': aspect_keword}
+            data.append(one_data)
+            excel_data_count += 1
+        print(f"Excel {excel_file}共收集到数据 {excel_data_count}条")
+    print(f"共收集到数据 {len(data)}条")
+    r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
+    pp.pprint(r.json())
 
 if __name__ == '__main__':
     # check_data()
@@ -773,8 +775,8 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    # hostnames = ["http://192.168.50.139:7081/api/"]
-    hostnames = ["http://192.168.50.139:7081/api/","http://192.168.50.139:7082/api/","http://192.168.50.139:7083/api/","http://192.168.50.139:7084/api/"]
+    hostnames = ["http://192.168.50.139:7085/api/"]
+    # hostnames = ["http://192.168.50.139:7081/api/","http://192.168.50.139:7082/api/","http://192.168.50.139:7083/api/","http://192.168.50.139:7084/api/"]
     # hostnames = ["http://192.168.50.139:8086/api/","http://192.168.50.139:8088/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/","http://192.168.50.139:8082/api/", "http://192.168.50.139:8083/api/",
     #              "http://192.168.50.139:8084/api/","http://192.168.50.139:8085/api/","http://192.168.50.139:8086/api/",
@@ -797,6 +799,7 @@ if __name__ == '__main__':
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/package/")
     # delete_tasks_host(hostnames=hostnames)
     # setup_config_host(hostnames=hostnames)
+    # import_data(hostname=hostnames[0])
     # get_tasks(hostname='http://127.0.0.1:8080/api/')
     # ptimes1 = ["<:2020-10-01","<:2020-10-08", "<:2020-10-15","<:2020-10-30","<:2020-11-08","<:2020-11-15","<:2020-11-30","<:2020-12-08","<:2020-12-15", "<:2020-12-30", "<:2021-01-08","<:2021-1-15", "<:2021-1-30"]
     # ptimes2 = ["<:2020-09-01","<:2020-09-08", "<:2020-09-15","<:2020-09-20","<:2020-09-25","<:2020-11-11","<:2020-12-11","<:2020-12-25", "<:2021-01-08","<:2021-1-20", "<:2021-1-25"]
@@ -807,11 +810,12 @@ if __name__ == '__main__':
     #     print(ptime)
     #     import_com_data_host_first(channel=None,keyword_threhold=0,ptime_keyword=ptime, leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=1000, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_new")
     # import_com_data_host_first(channel=None,keyword_threhold=20,ptime_keyword=">:2020-1-20", leibie_num=[5000, -1, -1, -1, -1], require_tags=['component'], number=5000, unique_type=2, hostname=hostnames, not_cache=True, table="da_wide_table_new")
-    # import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[600,600,600,600,600],leibie_num=[0, 600, 0, 0, 0,0,0,0], require_tags=["effect"],number=1000, hostname=hostnames, num_by_channel=True, ptime_keyword=">:2021-04-20", table="da_wide_table_before",keyword_threhold=30)
+    # import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[600,600,600,600,600],leibie_num=[0, 600, 0, 0, 0,0,0,0], require_tags=["effect"],number=1000, hostname=hostnames, num_by_channel=True, ptime_keyword=">:2021-05-20", table="da_wide_table_before",keyword_threhold=30)
     # import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40],leibie_num=[5, 5, 5, 5, 5, 5, 5, 5], number=100, hostname=hostnames, num_by_channel=True)
     # import_dev_data(hostname=hostnames[0])
     # import_excel_data(hostname=hostnames[0])
     # import_data(hostname=hostnames[0])
     # import_pure_data(host=hostnames, wordtype='包装')
     # save_json_toexcel(jsonfile='/opt/lavector/package/192.168.50.139_8081.json')
-    import_type_data()
+    # import_type_data()
+    import_raw_excel_data(hostname=hostnames[0])
