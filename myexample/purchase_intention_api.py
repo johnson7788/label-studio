@@ -18,6 +18,8 @@ import hashlib
 import time
 import re
 import zipfile
+import math
+import collections
 
 headers = {'content-type': 'application/json;charset=UTF-8'}
 host = "http://localhost:8080/api/"
@@ -719,6 +721,15 @@ def import_type_data(channel_num=[600, 600, 600, 600, 600]):
             start_iter += 1
             start_num = import_num
 
+def read_arrow(arrow_file):
+    import pyarrow as pa
+    import json
+    file_obj = pa.OSFile(arrow_file)
+    result_all = file_obj.read()
+    decode_res = result_all.decode('utf-8')
+    res = json.loads(decode_res)
+    return res
+
 def import_raw_excel_data(hostname):
     """
     不从数据库中导入数据了，从最原始的excel中导入数据
@@ -726,39 +737,47 @@ def import_raw_excel_data(hostname):
     :return:
     """
     import pandas as pd
-    excel_dir = '/Users/admin/Documents/lavector/购买意向分类/excel_data'
-    excel_list = os.listdir(excel_dir)
-    excel_list_filter = [ex for ex in excel_list if ex.endswith('xlsx') and not ex.startswith('~')]
+    arrow_dir = '/Users/admin/Documents/lavector/购买意向分类/excel_data'
+    arrow_list = os.listdir(arrow_dir)
+    arrow_list_filter = [ex for ex in arrow_list if ex.endswith('.arrow')]
     data = []
-    # data = [{'title': '',
-    #          'text': '还吃瓜呢？还不快来找一款合适自己的男士眼霜？科颜氏男士小冰棒眼霜，专门针对双眼易于疲劳，产生浮肿或者黑眼圈的人群，易于涂抹，轻轻一扫，双眼即被唤醒。放心交友的秘密武器#本人黑眼圈声明#',
-    #          'keyword': '科颜氏男士小冰棒眼霜'},
-    #         {'title': '我是标题',
-    #          'text': '转眼就要过年啦~如果你问我有什么新年愿望~那自然是祈福新的一年红红火火，万事如意~这不~就特应景的入了自然堂X天坛祈福限量版礼盒！喜庆的红色礼盒包装，一收到就有种来年要鸿运当头的feel~礼盒包含了小紫瓶精华、小紫瓶熬夜眼霜、小紫瓶冰肌水和乳液四件套！重点来说下这个小紫瓶精华，真的是我秋冬的熬夜补水救星了~轻薄的质地，上脸意外的滋润，轻拍几下就能吸收~还添加有自然堂独家成分喜马拉雅红球藻，富含天然虾青素，有效对抗自由基，抗氧化的一把好手～4%烟酰胺焕亮肌肤，二裂酵母修护肌底，强强联手的成分，还怕什么熬夜黄！对像我这样长时间熬夜的妹子就比较友好~我差不多用了一周左右，脸上因为干燥形成的起皮都缓解不少，肤色也有所提亮噢！PS：搭配它的熬夜cp小紫瓶熬夜眼霜，修护效果更double！必须把好气色带到新的一年#祈福2021 天坛x自然堂# 收起全文d',
-    #          'keyword': '小紫瓶熬夜眼霜'},
-    #         ]
-    for excel_file in excel_list_filter:
-        excel_file_path = os.path.join(excel_dir, excel_file)
-        df = pd.read_excel(excel_file_path)
-        excel_data_count = 0
-        for idx, d in df.iterrows():
-            if d.notnull()['title']:
+    #按关键字过滤和content过滤
+    # unique_keywords = []
+    contents = []
+    for arr_file in arrow_list_filter:
+        arr_file_path = os.path.join(arrow_dir, arr_file)
+        read_data = read_arrow(arrow_file=arr_file_path)
+        select_data = zip(read_data['title'].values(), read_data['content'].values(), read_data['tag_format_品牌(aspect)'].values())
+        count_data = 0
+        for title, content, aspect in select_data:
+            if not isinstance(title, str):
                 title = ''
-            else:
-                title = d['title']
-            if d.notnull()['content']:
-                continue
-            else:
-                content = d['content']
-            if d.notnull()['tag_format_品牌(aspect)']:
-                continue
-            else:
-                aspect_keword = d['tag_format_品牌(aspect)']
-            one_data = {'title': title, 'content': content, 'keyword': aspect_keword}
-            data.append(one_data)
-            excel_data_count += 1
-        print(f"Excel {excel_file}共收集到数据 {excel_data_count}条")
+            if isinstance(content, str) and isinstance(aspect,str):
+                # aspect 可能是逗号分隔的，那么只取第一个
+                aspect_list = aspect.split(',')
+                aspect = aspect_list[0]
+                aspect = aspect.replace('_',' ')
+                # if aspect not in unique_keywords:
+                #     unique_keywords.append(aspect)
+                # else:
+                #     continue
+                if content not in contents:
+                    contents.append(content)
+                else:
+                    continue
+                one_data = {'title': title, 'text': content, 'keyword': aspect}
+                data.append(one_data)
+                count_data += 1
+            if len(data) > 5000:
+                break
+        print(f"从{arr_file}中共收集到数据 {count_data}条")
     print(f"共收集到数据 {len(data)}条")
+    # 统计下数据，筛选出我们需要的数据
+    title_counter = collections.Counter([d['title'] for d in data])
+    content_counter = collections.Counter([d['text'] for d in data])
+    keyword_counter = collections.Counter([d['keyword'] for d in data])
+    print(f"共收集到的不同的句子数{len(content_counter)}, 不同的关键字数{len(keyword_counter)},不同的title数{len(title_counter)}")
+    # 按照keywords过滤后的data
     r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
 
@@ -797,7 +816,7 @@ if __name__ == '__main__':
     # export_data(hostname=hostnames[2],dirpath="/opt/lavector/fragrance/",jsonfile="fragrance_3000_0623.json")
     # export_data(hostname=hostnames[3],dirpath="/opt/lavector/promotion/",jsonfile="promotion_3000_0623.json")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/package/")
-    # delete_tasks_host(hostnames=hostnames)
+    delete_tasks_host(hostnames=hostnames)
     # setup_config_host(hostnames=hostnames)
     # import_data(hostname=hostnames[0])
     # get_tasks(hostname='http://127.0.0.1:8080/api/')
