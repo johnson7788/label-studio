@@ -427,6 +427,8 @@ def import_absa_data_host_first(channel=['jd', 'tmall'],channel_num=[6,6,6,6,6],
     :return:
     """
     # 对应着require_tags的中文名字
+    if channel is None:
+        channel = ["jd","weibo","redbook","tiktok","tmall"]
     leibie = ['成分', '功效', '香味', '包装', '肤感','促销','服务','价格']
     # leibie_num = [100, 100, 100, 100, 100]
     # leibie_num = [-1, -1, -1, -1, 200]
@@ -777,7 +779,7 @@ if __name__ == '__main__':
     # predict_model()
     # hostnames = ["http://192.168.50.139:8087/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/", "http://192.168.50.139:8085/api/"]
-    hostnames = ["http://192.168.50.139:8081/api/"]
+    hostnames = ["http://192.168.50.139:8089/api/"]
     # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
@@ -786,16 +788,15 @@ if __name__ == '__main__':
     #              "http://192.168.50.119:8083/api/", "http://192.168.50.119:8084/api/","http://192.168.50.119:8085/api/",
     #              "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
     #              "http://192.168.50.119:8089/api/"]
-    # delete_tasks_host(hostnames=hostnames)
-    # setup_config_host(hostnames=hostnames)
+    delete_tasks_host(hostnames=hostnames)
+    setup_config_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40],leibie_num=[5, 5, 5, 5, 5, 5, 5, 5], number=100, hostname=hostnames, num_by_channel=True)
     # import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40],leibie_num=[0, 0, 0, 0, 0,40,0,0], number=200, hostname=hostnames, num_by_channel=True)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data(hostname=hostnames[0], dirpath="/opt/lavector/absa/", jsonfile='8081-0618-200.json')
-    import_absa_data_host_first(channel=None,require_tags=["effect","skin"],number=800, hostname=hostnames, mirror=True)
-    # import_absa_data_host_first(channel=['jd'],leibie_num=[0, 0, 0, 200, 0],require_tags=["pack"],number=700, hostname=hostnames, mirror=False, ptime_keyword=">:2021-04-05")
+    import_absa_data_host_first(channel=None,channel_num=[40,40,40,40,40], leibie_num=[0, 0, 200, 0, 0,0,0,0],require_tags=["fragrance"],number=100, hostname=hostnames, mirror=False, ptime_keyword=">:2021-05-05",num_by_channel=False)
     # import_dev_data(hostname=hostnames[0])
     # import_excel_per_data(hostname=hostnames[0])
     # get_tasks(hostname=hostnames[0], taskid=1292)
