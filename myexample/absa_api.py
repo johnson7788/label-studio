@@ -412,8 +412,31 @@ def import_absa_data_host(channel=['jd', 'tmall'], number=10, hostname=None):
         pp.pprint(r.json())
         print(f"共导入主机host{h}中数据{len(vdata)}条")
 
+def predict_dem8(test_data, host="192.168.50.139:3326"):
+    """
+    预测8个维度的数据，dem8接口调用
+    :param test_data:
+    :return:
+    """
+    post_data = []
+    for d in test_data:
+        text = d['text']
+        keyword = d['keyword']
+        wordtype = d['wordtype']
+        post_data.append([text,keyword,wordtype])
+    url = f"http://{host}/api/dem8_predict"
+    data = {'data': post_data}
+    headers = {'content-type': 'application/json'}
+    r = requests.post(url, headers=headers, data=json.dumps(data),  timeout=360)
+    res_data = r.json()
+    fitler_data = []
+    for td,rd in zip(test_data,res_data):
+        if rd[0] == "是":
+            fitler_data.append(td)
+    print(f"共有数据{len(test_data)}条，经过8个维度的模型的过滤后的剩余数据是{len(fitler_data)}条，去除无效数据{len(test_data)-len(fitler_data)}条")
+    return fitler_data
 
-def import_absa_data_host_first(channel=['jd', 'tmall'],channel_num=[6,6,6,6,6], leibie_num=[100, 100, 100, 100, 100,100,100,100], require_tags=["component","effect","fragrance","pack","skin","promotion","service","price"],num_by_channel=False, number=30, hostname=None, mirror=False, unique_type=1, ptime_keyword=">:2021-01-12", table="da_wide_table_before",keyword_threhold=20):
+def import_absa_data_host_first(channel=['jd', 'tmall'],channel_num=[6,6,6,6,6], leibie_num=[100, 100, 100, 100, 100,100,100,100], require_tags=["component","effect","fragrance","pack","skin","promotion","service","price"],num_by_channel=False, number=30, hostname=None, mirror=False, unique_type=1, ptime_keyword=">:2021-01-12", table="da_wide_table_before",keyword_threhold=20,predict_before=True):
     """
     按比例导入不同的host, 导入情感分析数据, 从hive数据库中导入, 导入到label-studio前，需要检查下这条数据是否已经导入过
     12月份，功效4000条，其它维度各1500条
@@ -424,6 +447,7 @@ def import_absa_data_host_first(channel=['jd', 'tmall'],channel_num=[6,6,6,6,6],
     :param require_tags: 需要哪些维度的语料, eg: ["component", "effect"]
     :param hostname:平均导入每个host中,列表或None
     :param mirror: 给所有host导入一样的数据, 否则每个host平分所有数据
+    :param predict_before: 在进行情感的数据导入前，通过8个维度的判断，筛选出符合8个维度判断的词
     :return:
     """
     # 对应着require_tags的中文名字
@@ -477,6 +501,8 @@ def import_absa_data_host_first(channel=['jd', 'tmall'],channel_num=[6,6,6,6,6],
         valid_data.append(one_data)
     print(f'关键字出现的总的次数：{keywords_dict}')
     print(f"可导入的有效数据是{len(valid_data)}, 有重复数据或不需要数据{len(data) - len(valid_data)} 是无需导入的")
+    if predict_before:
+        valid_data = predict_dem8(test_data=valid_data)
     if not valid_data:
         # 如果都是已经导入过的数据，直接放弃导入
         return
@@ -763,6 +789,11 @@ def import_excel_data(hostname):
     r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
 
+def absa20000():
+    for i in range(17,30):
+        ptime = f">:2021-06-{i}"
+        import_absa_data_host_first(channel=None,channel_num=[100,100,100,100,100], leibie_num=[500,500, 500, 500, 500,500,500,500],require_tags=["component","effect","fragrance","pack","skin","promotion","service","price"],number=10, hostname=hostnames, mirror=False, ptime_keyword=ptime,num_by_channel=False)
+
 if __name__ == '__main__':
     # check_data()
     # setup_config(hostname=host)
@@ -779,7 +810,8 @@ if __name__ == '__main__':
     # predict_model()
     # hostnames = ["http://192.168.50.139:8087/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/", "http://192.168.50.139:8085/api/"]
-    hostnames = ["http://192.168.50.139:8089/api/"]
+    # hostnames = ["http://192.168.50.139:8089/api/"]
+    hostnames = ["http://192.168.50.139:7081/api/","http://192.168.50.139:7082/api/","http://192.168.50.139:7083/api/","http://192.168.50.139:7084/api/"]
     # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
@@ -788,15 +820,16 @@ if __name__ == '__main__':
     #              "http://192.168.50.119:8083/api/", "http://192.168.50.119:8084/api/","http://192.168.50.119:8085/api/",
     #              "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
     #              "http://192.168.50.119:8089/api/"]
-    delete_tasks_host(hostnames=hostnames)
-    setup_config_host(hostnames=hostnames)
+    # delete_tasks_host(hostnames=hostnames)
+    # setup_config_host(hostnames=hostnames)
     # import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40],leibie_num=[5, 5, 5, 5, 5, 5, 5, 5], number=100, hostname=hostnames, num_by_channel=True)
     # import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40],leibie_num=[0, 0, 0, 0, 0,40,0,0], number=200, hostname=hostnames, num_by_channel=True)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
     # export_data(hostname=hostnames[0], dirpath="/opt/lavector/absa/", jsonfile='8081-0618-200.json')
-    import_absa_data_host_first(channel=None,channel_num=[40,40,40,40,40], leibie_num=[0, 0, 200, 0, 0,0,0,0],require_tags=["fragrance"],number=100, hostname=hostnames, mirror=False, ptime_keyword=">:2021-05-05",num_by_channel=False)
+    # import_absa_data_host_first(channel=None,channel_num=[200,200,200,200,200], leibie_num=[1000,1000, 1000, 1000, 1000,1000,1000,1000],require_tags=["component","effect","fragrance","pack","skin","promotion","service","price"],number=10, hostname=hostnames, mirror=False, ptime_keyword=">:2021-06-05",num_by_channel=False)
     # import_dev_data(hostname=hostnames[0])
     # import_excel_per_data(hostname=hostnames[0])
     # get_tasks(hostname=hostnames[0], taskid=1292)
+    absa20000()
