@@ -1257,7 +1257,7 @@ if __name__ == '__main__':
     # import_absa_data_host_first(channel=['jd','tmall'],number=4000, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
-    # export_data(hostname="http://192.168.50.139:8081/api/",dirpath="/opt/lavector/relation/", jsonfile='192.168.50.139_8081_1000.json ',)
+    export_data(hostname="http://192.168.50.139:8081/api/",dirpath="/opt/lavector/relation/", jsonfile='192.168.50.139_8081_1000.json ',)
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/relation/")
     # delete_tasks_host(hostnames=hostnames)
     # setup_config_host(hostnames=hostnames)
