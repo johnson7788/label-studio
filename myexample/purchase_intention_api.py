@@ -730,10 +730,13 @@ def read_arrow(arrow_file):
     res = json.loads(decode_res)
     return res
 
-def import_raw_excel_data(hostname):
+def import_raw_excel_data(hostnames, each_excel_data_num = 4000, aspect_num = 50):
     """
     不从数据库中导入数据了，从最原始的excel中导入数据
     导入3个列， content, title, tag_format_品牌(aspect)
+    :param hostnames: list
+    :param each_excel_data_num: 每个excel收集4000条
+    :param aspect_num: 每个aspect出现的次数不超过50次
     :return:
     """
     import pandas as pd
@@ -744,7 +747,11 @@ def import_raw_excel_data(hostname):
     #按关键字过滤和content过滤
     # unique_keywords = []
     contents = []
-    for arr_file in arrow_list_filter:
+    total_num = len(arrow_list_filter) * each_excel_data_num
+    print(f"总的数据量将是: {total_num}条")
+    cal_num = [0] * len(arrow_list_filter)
+    aspect_counters = collections.Counter()
+    for arr_idx, arr_file in enumerate(arrow_list_filter):
         arr_file_path = os.path.join(arrow_dir, arr_file)
         read_data = read_arrow(arrow_file=arr_file_path)
         select_data = zip(read_data['title'].values(), read_data['content'].values(), read_data['tag_format_品牌(aspect)'].values())
@@ -757,10 +764,10 @@ def import_raw_excel_data(hostname):
                 aspect_list = aspect.split(',')
                 aspect = aspect_list[0]
                 aspect = aspect.replace('_',' ')
-                # if aspect not in unique_keywords:
-                #     unique_keywords.append(aspect)
-                # else:
-                #     continue
+                if aspect_counters[aspect] < aspect_num:
+                    aspect_counters[aspect] +=1
+                else:
+                    continue
                 if content not in contents:
                     contents.append(content)
                 else:
@@ -768,18 +775,25 @@ def import_raw_excel_data(hostname):
                 one_data = {'title': title, 'text': content, 'keyword': aspect}
                 data.append(one_data)
                 count_data += 1
-            if len(data) > 5000:
+            cal_num[arr_idx] += 1
+            if cal_num[arr_idx] > each_excel_data_num:
+                # 每个excel收集一定条数
                 break
         print(f"从{arr_file}中共收集到数据 {count_data}条")
-    print(f"共收集到数据 {len(data)}条")
+    print(f"共收集到数据 {len(data)}条, aspect的数量是{len(aspect_counters)}")
     # 统计下数据，筛选出我们需要的数据
     title_counter = collections.Counter([d['title'] for d in data])
     content_counter = collections.Counter([d['text'] for d in data])
     keyword_counter = collections.Counter([d['keyword'] for d in data])
     print(f"共收集到的不同的句子数{len(content_counter)}, 不同的关键字数{len(keyword_counter)},不同的title数{len(title_counter)}")
     # 按照keywords过滤后的data
-    r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
-    pp.pprint(r.json())
+    every_host_number = int(len(data) / len(hostnames))
+    print(f"每个主机导入数据{every_host_number}")
+    vdatas = [data[i:i + every_host_number] for i in range(0, len(data), every_host_number)]
+    for h, vdata in zip(hostnames, vdatas):
+        r = requests.post(h + "project/import", data=json.dumps(vdata), headers=headers)
+        pp.pprint(r.json())
+        print(f"共导入主机host: {h}中数据{len(vdata)}条")
 
 if __name__ == '__main__':
     # check_data()
@@ -794,7 +808,7 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    hostnames = ["http://192.168.50.139:7085/api/"]
+    hostnames = ["http://192.168.50.139:7085/api/","http://192.168.50.139:7086/api/"]
     # hostnames = ["http://192.168.50.139:7081/api/","http://192.168.50.139:7082/api/","http://192.168.50.139:7083/api/","http://192.168.50.139:7084/api/"]
     # hostnames = ["http://192.168.50.139:8086/api/","http://192.168.50.139:8088/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/","http://192.168.50.139:8082/api/", "http://192.168.50.139:8083/api/",
@@ -837,4 +851,4 @@ if __name__ == '__main__':
     # import_pure_data(host=hostnames, wordtype='包装')
     # save_json_toexcel(jsonfile='/opt/lavector/package/192.168.50.139_8081.json')
     # import_type_data()
-    import_raw_excel_data(hostname=hostnames[0])
+    import_raw_excel_data(hostnames)
