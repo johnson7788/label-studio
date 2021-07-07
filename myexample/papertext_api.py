@@ -17,6 +17,7 @@ import hashlib
 import time
 import re
 import zipfile
+import pickle
 
 headers = {'content-type': 'application/json;charset=UTF-8'}
 host = "http://localhost:8080/api/"
@@ -32,6 +33,9 @@ def setup_config(hostname=None):
     data = {"label_config":
 """
 <View>
+  <View style="flex: 30%; color:red">
+    <Header value="$location" />
+  </View>
   <Text name="my_text" value="$text"></Text>
   <View style="flex: 30%">
   <Choices name="sentiment" toName="my_text" choice="single" showInLine="true">
@@ -84,7 +88,7 @@ def get_tasks(taskid=None, page_size=5000, hostname=None):
         r = requests.get(host + "tasks/" + taskid, data=json.dumps({'filters':None}), headers=headers)
     else:
         payload = {'fields': 'all', 'page': 1, 'page_size': page_size, 'order': 'id'}
-        r = requests.get(host + "tasks", params=payload, data=json.dumps({'filters':None}), headers=headers)
+        r = requests.get(hostname + "tasks", params=payload, data=json.dumps({'filters':None}), headers=headers)
     print(r.json())
     pp.pprint(r.json())
     results = r.json()
@@ -286,14 +290,15 @@ def get_imported_data_md5(imported_data):
     :return: 按列表顺序返回md5的列表[]
     """
     md5_list = []
-    for res in imported_data:
-        data = res['data']
-        md5_value = data.get('md5')
-        if not md5_value:
-            # 说明不存在md5这个字段，开始计算
-            content = data['keyword'] + data['text']
-            md5_value = cal_md5(content=content)
-        md5_list.append(md5_value)
+    if imported_data['tasks']:
+        for res in imported_data:
+            data = res['data']
+            md5_value = data.get('md5')
+            if not md5_value:
+                # 说明不存在md5这个字段，开始计算
+                content = data['keyword'] + data['text']
+                md5_value = cal_md5(content=content)
+            md5_list.append(md5_value)
     return md5_list
 
 
@@ -714,40 +719,62 @@ def import_excel_data(hostname):
     r = requests.post(hostname + "project/import", data=json.dumps(data), headers=headers)
     pp.pprint(r.json())
 
+
+def import_cache_data(hostname):
+    """
+    导入所有的/Users/admin/Documents/mypaper/*.ecache文件的内容
+    :param number:
+    :return:
+    """
+    # 要导入的数据
+    valid_data = []
+    # 已经导入的数据, 注意更改获取的样本数目，默认是5000条
+    imported_data = get_tasks(page_size=5000, hostname=hostname)
+    imported_data_md5 = get_imported_data_md5(imported_data)
+    # 开始从ecache文件获取数据
+    cache_dir = '/Users/admin/Documents/mypaper/'
+    files = os.listdir(cache_dir)
+    ecache_files = [f for f in files if f.endswith('.ecache')]
+    ecache_path = [os.path.join(cache_dir,f) for f in ecache_files]
+    # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
+    print(f'发现ecache文件: {len(ecache_path)} 个')
+    for ecache in ecache_path:
+        with open(ecache, 'rb') as f:
+            pgcache = pickle.load(f)
+        #对段落信息进行处理，放入label-studio
+        for pginfo in pgcache:
+            lines_num = len(pginfo['lines'])
+            text = pginfo['text']
+            witdh = pginfo['paragraph_width']
+            height = pginfo['paragraph_height']
+            #位置信息
+            location = f"lines num:{lines_num},paragraph width:{witdh},paragraph height:{height},X0:{pginfo['x0']},X1:{pginfo['x1']},Y0:{pginfo['y0']},Y1:{pginfo['y1']},page width:{pginfo['page_width']},page height:{pginfo['page_height']}"
+            data_md5 = cal_md5(text)
+            if data_md5 in imported_data_md5:
+                # 数据已经导入到label-studio过了，不需要重新导入
+                continue
+            else:
+                one_data = {}
+                # 没有导入过label-studio，那么加入到valid_data，进行导入
+                # 设置md5字段，方便以后获取
+                one_data['md5'] = data_md5
+                one_data['text'] = text
+                one_data['location'] = location
+                valid_data.append(one_data)
+    print(f"可导入的有效数据是{len(valid_data)}")
+    r = requests.post(hostname + "project/import", data=json.dumps(valid_data), headers=headers)
+    pp.pprint(r.json())
+    print(f"共导入数据{len(valid_data)}条")
+
 if __name__ == '__main__':
-    # check_data()
-    # setup_config(hostname=host)
-    # get_project()
-    # import_data()
-    # get_tasks()
-    # get_tasks(taskid=0)
-    # delete_tasks(hostname="http://192.168.50.119:8090/api/")
-    # get_completions()
-    # delete_completions()
-    # health()
-    # list_models()
-    # train_model()
-    # predict_model()
     # hostnames = ["http://192.168.50.139:8087/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/", "http://192.168.50.139:8085/api/"]
     # hostnames = ["http://192.168.50.139:8085/api/"]
     hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
-    # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
-    # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/"]
-    # hostnames = ["http://192.168.50.119:8080/api/", "http://192.168.50.119:8081/api/","http://192.168.50.119:8082/api/",
-    #              "http://192.168.50.119:8083/api/", "http://192.168.50.119:8084/api/","http://192.168.50.119:8085/api/",
-    #              "http://192.168.50.119:8086/api/", "http://192.168.50.119:8087/api/","http://192.168.50.119:8088/api/",
-    #              "http://192.168.50.119:8089/api/"]
     delete_tasks_host(hostnames=hostnames)
     setup_config_host(hostnames=hostnames)
-    import_sentence_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[100,0,0,0,100],number=50, hostname=hostnames)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
-    # export_data(hostname="http://192.168.50.119:8090/api/")
-    # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/absa/", jsonfile='xx.json')
-    # import_absa_data_host_first(channel=None,require_tags=["effect","skin"],number=800, hostname=hostnames, mirror=True)
-    # import_absa_data_host_first(channel=['jd'],leibie_num=[0, 0, 0, 200, 0],require_tags=["pack"],number=700, hostname=hostnames, mirror=False, ptime_keyword=">:2021-04-05")
-    # import_dev_data(hostname=hostnames[0])
-    # import_excel_per_data(hostname=hostnames[0])
-    # get_tasks(hostname=hostnames[0], taskid=1292)
+    import_cache_data(hostname=hostnames[0])
+

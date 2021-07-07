@@ -808,7 +808,7 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    hostnames = ["http://192.168.50.139:7085/api/","http://192.168.50.139:7086/api/"]
+    hostnames = ["http://192.168.50.139:8081/api/","http://192.168.50.139:8085/api/"]
     # hostnames = ["http://192.168.50.139:7081/api/","http://192.168.50.139:7082/api/","http://192.168.50.139:7083/api/","http://192.168.50.139:7084/api/"]
     # hostnames = ["http://192.168.50.139:8086/api/","http://192.168.50.139:8088/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/","http://192.168.50.139:8082/api/", "http://192.168.50.139:8083/api/",
@@ -831,7 +831,7 @@ if __name__ == '__main__':
     # export_data(hostname=hostnames[3],dirpath="/opt/lavector/promotion/",jsonfile="promotion_3000_0623.json")
     # export_data_host(hostnames=hostnames, dirpath="/opt/lavector/package/")
     delete_tasks_host(hostnames=hostnames)
-    # setup_config_host(hostnames=hostnames)
+    setup_config_host(hostnames=hostnames)
     # import_data(hostname=hostnames[0])
     # get_tasks(hostname='http://127.0.0.1:8080/api/')
     # ptimes1 = ["<:2020-10-01","<:2020-10-08", "<:2020-10-15","<:2020-10-30","<:2020-11-08","<:2020-11-15","<:2020-11-30","<:2020-12-08","<:2020-12-15", "<:2020-12-30", "<:2021-01-08","<:2021-1-15", "<:2021-1-30"]
