@@ -1,7 +1,7 @@
 pip>=20.2.3
 appdirs==1.4.3
 attrs>=19.1.0
-blis==0.4.1
+blis
 certifi==2019.11.28
 chardet==3.0.4
 click~=7.0
@@ -20,7 +20,7 @@ requests>=2.22.0
 six>=1.13.0
 srsly>=0.2.0
 tqdm>=4.40.2
-urllib3==1.25.7
+urllib3
 wasabi==0.4.2
 Werkzeug==0.16.0
 ordered-set==4.0.2
