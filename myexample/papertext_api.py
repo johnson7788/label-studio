@@ -45,6 +45,10 @@ def setup_config(hostname=None):
     <Choice value="段落" background="blue"/>
     <Choice value="标题" background="black"/>
     <Choice value="参考" background="purple"/>
+    <Choice value="表格" background="green"/>
+    <Choice value="图像" background="red"/>
+    <Choice value="公式" background="blue"/>
+    <Choice value="其它" background="yellow"/>
   </Choices>
   </View>
 </View>
@@ -291,12 +295,12 @@ def get_imported_data_md5(imported_data):
     """
     md5_list = []
     if imported_data['tasks']:
-        for res in imported_data:
+        for res in imported_data['tasks']:
             data = res['data']
             md5_value = data.get('md5')
             if not md5_value:
                 # 说明不存在md5这个字段，开始计算
-                content = data['keyword'] + data['text']
+                content = data['text']
                 md5_value = cal_md5(content=content)
             md5_list.append(md5_value)
     return md5_list
@@ -734,7 +738,7 @@ def import_cache_data(hostname):
     # 开始从ecache文件获取数据
     cache_dir = '/Users/admin/Documents/mypaper/'
     files = os.listdir(cache_dir)
-    ecache_files = [f for f in files if f.endswith('.ecache')]
+    ecache_files = [f for f in files if f.endswith('.traincache')]
     ecache_path = [os.path.join(cache_dir,f) for f in ecache_files]
     # 获取到的data数据进行排查，如果已经导入过了，就过滤掉
     print(f'发现ecache文件: {len(ecache_path)} 个')
@@ -772,9 +776,9 @@ if __name__ == '__main__':
     # hostnames = ["http://192.168.50.139:8085/api/"]
     hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
-    delete_tasks_host(hostnames=hostnames)
+    # delete_tasks_host(hostnames=hostnames)
     setup_config_host(hostnames=hostnames)
     # get_tasks_host(hostnames=hostnames)
     # get_completions_host(hostnames=hostnames)
-    import_cache_data(hostname=hostnames[0])
+    # import_cache_data(hostname=hostnames[0])
 
