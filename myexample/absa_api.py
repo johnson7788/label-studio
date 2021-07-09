@@ -828,10 +828,10 @@ if __name__ == '__main__':
     # list_models()
     # train_model()
     # predict_model()
-    hostnames = ["http://192.168.50.139:7089/api/"]
+    # hostnames = ["http://192.168.50.139:7089/api/"]
     # hostnames = ["http://192.168.50.139:8081/api/", "http://192.168.50.139:8085/api/"]
     # hostnames = ["http://192.168.50.139:8089/api/"]
-    # hostnames = ["http://192.168.50.139:7081/api/","http://192.168.50.139:7082/api/","http://192.168.50.139:7083/api/","http://192.168.50.139:7084/api/"]
+    hostnames = ["http://192.168.50.139:7081/api/","http://192.168.50.139:7082/api/","http://192.168.50.139:7083/api/","http://192.168.50.139:7084/api/"]
     # hostnames = ["http://127.0.0.1:8080/api/"]
     # setup_config(hostname="http://192.168.50.119:8090/api/")
     # import_absa_data_host(channel=['jd','tmall'],number=50, hostname=hostnames)
@@ -842,16 +842,16 @@ if __name__ == '__main__':
     #              "http://192.168.50.119:8089/api/"]
     # delete_tasks_host(hostnames=hostnames)
     # setup_config_host(hostnames=hostnames)
-    import_excel_per_data_relabel(hostname=hostnames[0])
+    # import_excel_per_data_relabel(hostname=hostnames[0])
     # import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40],leibie_num=[5, 5, 5, 5, 5, 5, 5, 5], number=100, hostname=hostnames, num_by_channel=True)
     # import_absa_data_host_first(channel=["jd","weibo","redbook","tiktok","tmall"],channel_num=[40,40,40,40,40],leibie_num=[0, 0, 0, 0, 0,40,0,0], number=200, hostname=hostnames, num_by_channel=True)
     # get_tasks_host(hostnames=hostnames)
-    # get_completions_host(hostnames=hostnames)
+    get_completions_host(hostnames=hostnames)
     # export_data(hostname="http://192.168.50.119:8090/api/")
-    # export_data(hostname=hostnames[0], dirpath="/opt/lavector/absa/", jsonfile='7081-0707-2500.json')
-    # export_data(hostname=hostnames[1], dirpath="/opt/lavector/absa/", jsonfile='7082-0707-2500.json')
-    # export_data(hostname=hostnames[2], dirpath="/opt/lavector/absa/", jsonfile='7083-0707-2500.json')
-    # export_data(hostname=hostnames[3], dirpath="/opt/lavector/absa/", jsonfile='7084-0707-2500.json')
+    export_data(hostname=hostnames[0], dirpath="/opt/lavector/absa/", jsonfile='7081-0707-5000.json')
+    export_data(hostname=hostnames[1], dirpath="/opt/lavector/absa/", jsonfile='7082-0707-5000.json')
+    export_data(hostname=hostnames[2], dirpath="/opt/lavector/absa/", jsonfile='7083-0707-5000.json')
+    export_data(hostname=hostnames[3], dirpath="/opt/lavector/absa/", jsonfile='7084-0707-5000.json')
     # import_absa_data_host_first(channel=None,channel_num=[200,200,200,200,200], leibie_num=[1000,1000, 1000, 1000, 1000,1000,1000,1000],require_tags=["component","effect","fragrance","pack","skin","promotion","service","price"],number=10, hostname=hostnames, mirror=False, ptime_keyword=">:2021-06-05",num_by_channel=False)
     # import_dev_data(hostname=hostnames[0])
     # import_excel_per_data(hostname=hostnames[0])
